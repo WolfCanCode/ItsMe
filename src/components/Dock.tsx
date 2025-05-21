@@ -1,0 +1,56 @@
+import { onMount } from "solid-js";
+import type { Project } from "../projects";
+
+export type DockRef = {
+  getIconPosition: (id: string) => DOMRect | null;
+};
+
+export default function Dock(props: {
+  projects: Project[];
+  onOpen: (id: string) => void;
+  minimizedIds?: string[];
+  ref?: (ref: DockRef) => void;
+}) {
+  let iconRefs: Record<string, HTMLButtonElement | undefined> = {};
+
+  // Expose getIconPosition via ref
+  onMount(() => {
+    props.ref?.({
+      getIconPosition: (id: string) => {
+        const btn = iconRefs[id];
+        return btn ? btn.getBoundingClientRect() : null;
+      },
+    });
+  });
+
+  return (
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/30 backdrop-blur-md rounded-2xl px-8 py-3 flex shadow-2xl z-50 border border-white/40">
+      {props.projects.map((project) => (
+        <div class="flex flex-col items-center mx-3" style="min-width: 3rem;">
+          <button
+            ref={(el) => (iconRefs[project.id] = el)}
+            class="bg-none border-none text-4xl cursor-pointer focus:outline-none transition-transform duration-150 hover:scale-125 hover:shadow-lg"
+            title={project.name}
+            onClick={() => props.onOpen(project.id)}
+            type="button"
+          >
+            {typeof project.icon === "string" ? (
+              <span class="text-4xl group-hover:scale-110 transition-transform z-10">
+                {project.icon}
+              </span>
+            ) : (
+              project.icon
+            )}
+          </button>
+          <span
+            class={`w-2 h-2 rounded-full bg-blue-500 mt-1 transition-opacity duration-200 ${
+              props.minimizedIds?.includes(project.id)
+                ? "opacity-100"
+                : "opacity-0"
+            }`}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}

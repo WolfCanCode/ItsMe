@@ -377,32 +377,10 @@ export default function Home() {
   });
 
   function openWindow(id: string) {
-    console.log("openWindow", id);
-    if (id === "course-trainer") {
-      setShowCourseTrainer(true);
-      setMinimizedCT(false);
-      setActiveWindow("course-trainer");
-      return;
-    }
-    if (id === "1") {
-      // Portfolio Website
-      setShowPortfolio(true);
-      setMinimizedPortfolio(false);
-      setActiveWindow("portfolio");
-      return;
-    }
-    if (id === "2") {
-      setShowTaskManager(true);
-      setMinimizedTaskManager(false);
-      setActiveWindow("task-manager");
-      return;
-    }
-    if (id === "3") {
-      setShowWeather(true);
-      setMinimizedWeather(false);
-      setActiveWindow("weather");
-      return;
-    }
+    const project = projects.find((p) => p.id === id);
+    if (!project) return;
+    const defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
+    const defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
     if (minimizedIds().includes(id)) {
       let restoreFrom: { x: number; y: number } | undefined = undefined;
       if (dockRef) {
@@ -432,7 +410,12 @@ export default function Home() {
       setOpenIds((ids) => [...ids, id]);
       setWindowStates((states) => ({
         ...states,
-        [id]: states[id] || { ...DEFAULT_STATE },
+        [id]: states[id] || {
+          x: DEFAULT_STATE.x,
+          y: DEFAULT_STATE.y,
+          width: defaultWidth,
+          height: defaultHeight,
+        },
       }));
     } else {
       setWindowStatus((status) => ({ ...status, [id]: { status: "open" } }));

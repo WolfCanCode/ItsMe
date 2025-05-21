@@ -1,4 +1,4 @@
-import { createEffect, createSignal, JSX, onMount, Show } from "solid-js";
+import { createEffect, createSignal, JSX, onMount } from "solid-js";
 import Desktop from "~/components/Desktop";
 import DesktopIcons from "~/components/DesktopIcons";
 import Dock, { DockRef } from "~/components/Dock";
@@ -22,8 +22,6 @@ const DEFAULT_STATE: WindowState = { x: 200, y: 100, width: 400, height: 300 };
 const STORAGE_KEY = "wolfcancode-os-state";
 
 // Add this before the Home function
-const courseTrainerIframes = new Map<string, JSX.Element>();
-const courseTrainerIframeRef: { current?: HTMLIFrameElement } = {};
 
 const [courseTrainerStyle, setCourseTrainerStyle] = createSignal({
   left: "200px",
@@ -379,6 +377,7 @@ export default function Home() {
   });
 
   function openWindow(id: string) {
+    console.log("openWindow", id);
     if (id === "course-trainer") {
       setShowCourseTrainer(true);
       setMinimizedCT(false);
@@ -501,10 +500,6 @@ export default function Home() {
         return rest;
       });
     }
-  }
-
-  function closeCourseTrainer() {
-    setShowCourseTrainer(false);
   }
 
   return (
@@ -793,14 +788,16 @@ export default function Home() {
         const isMinimized = minimizedIds().includes(project.id);
         if (!isOpen) return null;
         const zIndex = 100 + openIds().indexOf(project.id);
-        if (isMinimized) return null;
+        // Use project default size if available
+        const defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
+        const defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
         return (
           <Window
             title={project.name}
             x={windowStates()[project.id]?.x ?? DEFAULT_STATE.x}
             y={windowStates()[project.id]?.y ?? DEFAULT_STATE.y}
-            width={windowStates()[project.id]?.width ?? DEFAULT_STATE.width}
-            height={windowStates()[project.id]?.height ?? DEFAULT_STATE.height}
+            width={windowStates()[project.id]?.width ?? defaultWidth}
+            height={windowStates()[project.id]?.height ?? defaultHeight}
             zIndex={zIndex}
             isActive={activeWindow() === project.id}
             onClose={() => closeWindow(project.id)}

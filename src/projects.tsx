@@ -3,37 +3,32 @@ import PortfolioApp from "./routes/apps/PortfolioApp";
 import TaskManagerApp from "./routes/apps/TaskManagerApp";
 import WeatherApp from "./routes/apps/WeatherApp";
 import CourseTrainerApp from "./routes/apps/CourseTrainerApp";
-
-function getCourseTrainerIcon(): JSX.Element {
-  return (
-    <img
-      src="/course-trainer.png"
-      alt="Course Trainer"
-      class="w-10 h-10 object-contain bg-white rounded-lg shadow border border-gray-200"
-      loading="lazy"
-      draggable={false}
-    />
-  );
-}
+import AppIcon from "./components/AppIcon";
 
 export interface Project {
   id: string;
   name: string;
-  icon: string | JSX.Element; // emoji or image path or JSX
+  icon: string | (() => JSX.Element); // emoji or function returning JSX
   description: string;
   link: string;
   component: () => JSX.Element;
+  defaultWidth?: number;
+  defaultHeight?: number;
 }
 
 export const projects: Project[] = [
   {
     id: "course-trainer",
     name: "Course Trainer",
-    icon: getCourseTrainerIcon(),
+    icon: () => (
+      <AppIcon src="/course-trainer.png" alt="Course Trainer" size={40} />
+    ),
     description:
       "AWS, Azure, Google Cloud, and more: interactive certification quizzes and training.",
     link: "https://course-trainer.vercel.app/",
     component: CourseTrainerApp,
+    defaultWidth: 900,
+    defaultHeight: 650,
   },
   {
     id: "1",

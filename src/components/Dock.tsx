@@ -26,10 +26,16 @@ export default function Dock(props: {
   return (
     <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/30 backdrop-blur-md rounded-2xl px-8 py-3 flex shadow-2xl z-50 border border-white/40">
       {props.projects.map((project) => (
-        <div class="flex flex-col items-center mx-3" style="min-width: 3rem;">
+        <div
+          class="flex flex-col items-center mx-3 relative"
+          style="min-width: 3rem;"
+        >
+          {/* Overlay for hover/focus, but never blocks pointer events */}
+          <span class="absolute -inset-2 rounded-lg bg-blue-100 opacity-0 group-hover:opacity-80 group-focus:opacity-90 group-active:opacity-100 group-hover:shadow-lg group-focus:shadow-lg transition-all duration-200 pointer-events-none z-0" />
+          {/* The button wraps only the icon, so any click on the icon triggers onOpen */}
           <button
             ref={(el) => (iconRefs[project.id] = el)}
-            class="bg-none border-none text-4xl cursor-pointer focus:outline-none transition-transform duration-150 hover:scale-125 hover:shadow-lg"
+            class="relative z-10 bg-none border-none text-4xl cursor-pointer focus:outline-none transition-transform duration-150 hover:scale-125 hover:shadow-lg"
             title={project.name}
             onClick={() => props.onOpen(project.id)}
             type="button"
@@ -39,7 +45,7 @@ export default function Dock(props: {
                 {project.icon}
               </span>
             ) : (
-              project.icon
+              project.icon()
             )}
           </button>
           <span

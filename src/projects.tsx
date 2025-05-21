@@ -7,7 +7,7 @@ import CourseTrainerApp from "./routes/apps/CourseTrainerApp";
 function getCourseTrainerIcon(): JSX.Element {
   return (
     <img
-      src="src/media/icons/course-trainer.png"
+      src="/course-trainer.png"
       alt="Course Trainer"
       class="w-10 h-10 object-contain bg-white rounded-lg shadow border border-gray-200"
       loading="lazy"

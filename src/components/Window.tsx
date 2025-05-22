@@ -138,6 +138,8 @@ export default function Window(props: {
     // Set global interaction state
     props.setInteractingWindowId?.(props.title);
     props.setIsInteracting?.(true);
+    // Prevent iOS overflow scroll
+    document.body.style.overflow = "hidden";
   }
 
   // Touch support for dragging
@@ -156,6 +158,8 @@ export default function Window(props: {
     props.setIsInteracting?.(true);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
+    // Prevent iOS overflow scroll
+    document.body.style.overflow = "hidden";
   }
   function onTouchMove(e: TouchEvent) {
     if (!dragging) return;
@@ -173,6 +177,8 @@ export default function Window(props: {
     props.setIsInteracting?.(false);
     window.removeEventListener("touchmove", onTouchMove);
     window.removeEventListener("touchend", onTouchEnd);
+    // Restore overflow scroll
+    document.body.style.overflow = "";
   }
 
   function onMouseMove(e: MouseEvent) {
@@ -199,6 +205,8 @@ export default function Window(props: {
     // Clear global interaction state
     props.setInteractingWindowId?.(null);
     props.setIsInteracting?.(false);
+    // Restore overflow scroll
+    document.body.style.overflow = "";
     console.log("Window mouseup, dragging reset");
   }
 
@@ -320,9 +328,13 @@ export default function Window(props: {
       props.setIsInteracting?.(false);
       window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onUp);
+      // Restore overflow scroll
+      document.body.style.overflow = "";
     }
     window.addEventListener("touchmove", onMove, { passive: false });
     window.addEventListener("touchend", onUp);
+    // Prevent iOS overflow scroll
+    document.body.style.overflow = "hidden";
   }
 
   return (

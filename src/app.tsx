@@ -31,7 +31,7 @@ export default function App() {
       />
       <Meta property="og:type" content="website" />
       <Meta property="og:image" content="/images/icon-512.png" />
-      <Meta property="og:url" content="https://wolfcancode.com/" />
+      <Meta property="og:url" content="https://tommy-le.vercel.app/" />
       {/* Twitter */}
       <Meta name="twitter:card" content="summary_large_image" />
       <Meta

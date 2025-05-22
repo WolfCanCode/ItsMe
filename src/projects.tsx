@@ -32,16 +32,7 @@ export const projects: Project[] = [
     defaultWidth: 900,
     defaultHeight: 650,
   },
-  {
-    id: "my-cv",
-    name: "My CV",
-    icon: () => <AppIcon src="/images/cv-logo.png" alt="CV Logo" size={40} />,
-    description: "View my curriculum vitae as a PDF.",
-    link: "/pdf/myCV.pdf",
-    component: MyCVViewer,
-    defaultWidth: 800,
-    defaultHeight: 1000,
-  },
+
   {
     id: "interview-trainer",
     name: "Interview Trainer",
@@ -58,5 +49,15 @@ export const projects: Project[] = [
     component: InterviewTrainerApp,
     defaultWidth: 900,
     defaultHeight: 650,
+  },
+  {
+    id: "my-cv",
+    name: "My CV",
+    icon: () => <AppIcon src="/images/cv-logo.png" alt="CV Logo" size={40} />,
+    description: "View my curriculum vitae as a PDF.",
+    link: "/pdf/myCV.pdf",
+    component: MyCVViewer,
+    defaultWidth: 800,
+    defaultHeight: 1000,
   },
 ];

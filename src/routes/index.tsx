@@ -4,9 +4,10 @@ import DesktopIcons from "~/components/DesktopIcons";
 import Dock, { DockRef } from "~/components/Dock";
 import Window from "~/components/Window";
 import { projects } from "../projects";
-import CourseTrainerApp from "~/routes/apps/CourseTrainerApp";
-import MyCVViewer from "~/routes/apps/MyCVViewerApp";
-import InterviewTrainerApp from "~/routes/apps/InterviewTrainerApp";
+import CourseTrainerApp from "~/components/apps/CourseTrainerApp";
+import MyCVViewer from "~/components/apps/MyCVViewerApp";
+import InterviewTrainerApp from "~/components/apps/InterviewTrainerApp";
+import AboutTommyWindow from "~/components/apps/AboutTommyWindow";
 
 interface WindowState {
   x: number;
@@ -315,6 +316,38 @@ export default function Home() {
         setIsInteracting={setIsInteracting}
       >
         <InterviewTrainerApp />
+      </Window>
+      <Window
+        isOpen={openIds().includes("about-tommy")}
+        title="About Tommy"
+        x={windowStates()["about-tommy"]?.x ?? 200}
+        y={windowStates()["about-tommy"]?.y ?? 100}
+        width={windowStates()["about-tommy"]?.width ?? 400}
+        height={windowStates()["about-tommy"]?.height ?? 500}
+        zIndex={100 + openIds().indexOf("about-tommy")}
+        isActive={activeWindow() === "about-tommy"}
+        onClose={() => closeWindow("about-tommy")}
+        onMinimize={() => minimizeWindow("about-tommy")}
+        onClick={() => {
+          if (activeWindow() !== "about-tommy") {
+            bringToFront("about-tommy");
+            setActiveWindow("about-tommy");
+          }
+        }}
+        onMove={(x, y) => updateWindowState("about-tommy", { x, y })}
+        onResize={(width, height) =>
+          updateWindowState("about-tommy", { width, height })
+        }
+        onAnimationEnd={() => handleWindowAnimationEnd("about-tommy")}
+        status={windowStatus()["about-tommy"]?.status ?? "open"}
+        minimizeTarget={windowStatus()["about-tommy"]?.minimizeTarget}
+        restoreFrom={windowStatus()["about-tommy"]?.restoreFrom}
+        minimized={minimizedIds().includes("about-tommy")}
+        isInteracting={interactingWindowId() === "about-tommy"}
+        setInteractingWindowId={setInteractingWindowId}
+        setIsInteracting={setIsInteracting}
+      >
+        <AboutTommyWindow />
       </Window>
     </Desktop>
   );

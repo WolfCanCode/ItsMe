@@ -1,8 +1,9 @@
 import { JSX, Component } from "solid-js";
 import AppIcon from "./components/AppIcon";
-import MyCVViewer from "./routes/apps/MyCVViewerApp";
-import CourseTrainerApp from "./routes/apps/CourseTrainerApp";
-import InterviewTrainerApp from "./routes/apps/InterviewTrainerApp";
+import MyCVViewer from "./components/apps/MyCVViewerApp";
+import CourseTrainerApp from "./components/apps/CourseTrainerApp";
+import InterviewTrainerApp from "./components/apps/InterviewTrainerApp";
+import AboutTommyWindow from "./components/apps/AboutTommyWindow";
 export interface Project {
   id: string;
   name: string;
@@ -20,7 +21,7 @@ export const projects: Project[] = [
     name: "Course Trainer",
     icon: () => (
       <AppIcon
-        src="/images/course-trainer.png"
+        src="/images/app-icons/course-trainer.png"
         alt="Course Trainer"
         size={40}
       />
@@ -38,7 +39,7 @@ export const projects: Project[] = [
     name: "Interview Trainer",
     icon: () => (
       <AppIcon
-        src="/images/interview-trainer.png"
+        src="/images/app-icons/interview-trainer.png"
         alt="Interview Trainer"
         size={40}
       />
@@ -53,11 +54,25 @@ export const projects: Project[] = [
   {
     id: "my-cv",
     name: "My CV",
-    icon: () => <AppIcon src="/images/cv-logo.png" alt="CV Logo" size={40} />,
+    icon: () => (
+      <AppIcon src="/images/app-icons/my-cv.png" alt="CV Logo" size={40} />
+    ),
     description: "View my curriculum vitae as a PDF.",
     link: "/pdf/myCV.pdf",
     component: MyCVViewer,
     defaultWidth: 800,
     defaultHeight: 1000,
+  },
+  {
+    id: "about-tommy",
+    name: "About Tommy",
+    icon: () => (
+      <AppIcon src="/images/tommy-circle.png" alt="Tommy" size={40} />
+    ),
+    description: "About Tommy Le (wolfcancode) and social links.",
+    link: "#about-tommy",
+    component: AboutTommyWindow,
+    defaultWidth: 400,
+    defaultHeight: 500,
   },
 ];

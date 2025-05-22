@@ -1,14 +1,12 @@
 import { createSignal } from "solid-js";
-import MyCVViewer from "./apps/MyCVViewerApp";
-import CourseTrainerApp from "./apps/CourseTrainerApp";
+import MyCVViewer from "../components/apps/MyCVViewerApp";
+import CourseTrainerApp from "../components/apps/CourseTrainerApp";
 
 function MyIframe1() {
-  console.log("MyIframe1 mounted");
   return <CourseTrainerApp />;
 }
 
 function MyIframe2() {
-  console.log("MyIframe2 mounted");
   return <MyCVViewer />;
 }
 

@@ -4,6 +4,9 @@ import DesktopIcons from "~/components/DesktopIcons";
 import Dock, { DockRef } from "~/components/Dock";
 import Window from "~/components/Window";
 import { projects } from "../projects";
+import CourseTrainerApp from "~/routes/apps/CourseTrainerApp";
+import MyCVViewer from "~/routes/apps/MyCVViewerApp";
+import InterviewTrainerApp from "~/routes/apps/InterviewTrainerApp";
 
 interface WindowState {
   x: number;
@@ -165,7 +168,6 @@ export default function Home() {
       <Dock
         projects={projects}
         onOpen={(id) => {
-          // Always bring to front and set active when clicking dock icon
           openWindow(id);
           bringToFront(id);
           setActiveWindow(id);
@@ -174,43 +176,93 @@ export default function Home() {
         ref={(ref) => (dockRef = ref)}
         activeId={activeWindow() ?? undefined}
       />
-      {projects.map((project) => {
-        const isOpen = openIds().includes(project.id);
-        const zIndex = 100 + openIds().indexOf(project.id);
-        const defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
-        const defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
-        return (
-          <Window
-            isOpen={isOpen}
-            title={project.name}
-            x={windowStates()[project.id]?.x ?? DEFAULT_STATE.x}
-            y={windowStates()[project.id]?.y ?? DEFAULT_STATE.y}
-            width={windowStates()[project.id]?.width ?? defaultWidth}
-            height={windowStates()[project.id]?.height ?? defaultHeight}
-            zIndex={zIndex}
-            isActive={activeWindow() === project.id}
-            onClose={() => closeWindow(project.id)}
-            onMinimize={() => minimizeWindow(project.id)}
-            onClick={() => {
-              if (activeWindow() !== project.id) {
-                bringToFront(project.id);
-                setActiveWindow(project.id);
-              }
-            }}
-            onMove={(x, y) => updateWindowState(project.id, { x, y })}
-            onResize={(width, height) =>
-              updateWindowState(project.id, { width, height })
-            }
-            onAnimationEnd={() => handleWindowAnimationEnd(project.id)}
-            status={windowStatus()[project.id]?.status ?? "open"}
-            minimizeTarget={windowStatus()[project.id]?.minimizeTarget}
-            restoreFrom={windowStatus()[project.id]?.restoreFrom}
-            minimized={minimizedIds().includes(project.id)}
-          >
-            <project.component />
-          </Window>
-        );
-      })}
+      <Window
+        isOpen={openIds().includes("course-trainer")}
+        title="Course Trainer"
+        x={windowStates()["course-trainer"]?.x ?? 200}
+        y={windowStates()["course-trainer"]?.y ?? 100}
+        width={windowStates()["course-trainer"]?.width ?? 900}
+        height={windowStates()["course-trainer"]?.height ?? 650}
+        zIndex={100 + openIds().indexOf("course-trainer")}
+        isActive={activeWindow() === "course-trainer"}
+        onClose={() => closeWindow("course-trainer")}
+        onMinimize={() => minimizeWindow("course-trainer")}
+        onClick={() => {
+          if (activeWindow() !== "course-trainer") {
+            bringToFront("course-trainer");
+            setActiveWindow("course-trainer");
+          }
+        }}
+        onMove={(x, y) => updateWindowState("course-trainer", { x, y })}
+        onResize={(width, height) =>
+          updateWindowState("course-trainer", { width, height })
+        }
+        onAnimationEnd={() => handleWindowAnimationEnd("course-trainer")}
+        status={windowStatus()["course-trainer"]?.status ?? "open"}
+        minimizeTarget={windowStatus()["course-trainer"]?.minimizeTarget}
+        restoreFrom={windowStatus()["course-trainer"]?.restoreFrom}
+        minimized={minimizedIds().includes("course-trainer")}
+      >
+        <CourseTrainerApp />
+      </Window>
+      <Window
+        isOpen={openIds().includes("my-cv")}
+        title="My CV"
+        x={windowStates()["my-cv"]?.x ?? 200}
+        y={windowStates()["my-cv"]?.y ?? 100}
+        width={windowStates()["my-cv"]?.width ?? 800}
+        height={windowStates()["my-cv"]?.height ?? 1000}
+        zIndex={100 + openIds().indexOf("my-cv")}
+        isActive={activeWindow() === "my-cv"}
+        onClose={() => closeWindow("my-cv")}
+        onMinimize={() => minimizeWindow("my-cv")}
+        onClick={() => {
+          if (activeWindow() !== "my-cv") {
+            bringToFront("my-cv");
+            setActiveWindow("my-cv");
+          }
+        }}
+        onMove={(x, y) => updateWindowState("my-cv", { x, y })}
+        onResize={(width, height) =>
+          updateWindowState("my-cv", { width, height })
+        }
+        onAnimationEnd={() => handleWindowAnimationEnd("my-cv")}
+        status={windowStatus()["my-cv"]?.status ?? "open"}
+        minimizeTarget={windowStatus()["my-cv"]?.minimizeTarget}
+        restoreFrom={windowStatus()["my-cv"]?.restoreFrom}
+        minimized={minimizedIds().includes("my-cv")}
+      >
+        <MyCVViewer />
+      </Window>
+      <Window
+        isOpen={openIds().includes("interview-trainer")}
+        title="Interview Trainer"
+        x={windowStates()["interview-trainer"]?.x ?? 200}
+        y={windowStates()["interview-trainer"]?.y ?? 100}
+        width={windowStates()["interview-trainer"]?.width ?? 900}
+        height={windowStates()["interview-trainer"]?.height ?? 650}
+        zIndex={100 + openIds().indexOf("interview-trainer")}
+        isActive={activeWindow() === "interview-trainer"}
+        onClose={() => closeWindow("interview-trainer")}
+        onMinimize={() => minimizeWindow("interview-trainer")}
+        onClick={() => {
+          if (activeWindow() !== "interview-trainer") {
+            bringToFront("interview-trainer");
+            setActiveWindow("interview-trainer");
+          }
+        }}
+        onMove={(x, y) => updateWindowState("interview-trainer", { x, y })}
+        onResize={(width, height) =>
+          updateWindowState("interview-trainer", { width, height })
+        }
+        onAnimationEnd={() => handleWindowAnimationEnd("interview-trainer")}
+        status={windowStatus()["interview-trainer"]?.status ?? "open"}
+        minimizeTarget={windowStatus()["interview-trainer"]?.minimizeTarget}
+        restoreFrom={windowStatus()["interview-trainer"]?.restoreFrom}
+        minimized={minimizedIds().includes("interview-trainer")}
+      >
+        <InterviewTrainerApp />
+      </Window>
     </Desktop>
   );
 }

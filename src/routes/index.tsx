@@ -82,7 +82,7 @@ export default function Home() {
       defaultWidth = Math.floor(window.innerWidth * 0.9);
       defaultHeight = Math.floor(window.innerHeight * 0.6);
       var defaultX = 10;
-      var defaultY = 10;
+      var defaultY = 70;
     } else {
       var defaultX = DEFAULT_STATE.x;
       var defaultY = DEFAULT_STATE.y;

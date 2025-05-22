@@ -396,7 +396,7 @@ export default function Window(props: {
           onMouseDown={(e) => e.stopPropagation()}
         />
         <span
-          class="ml-1 text-base font-bold text-gray-800 truncate"
+          class="ml-1 text-sm font-medium text-gray-800 truncate"
           style="max-width: 260px;"
         >
           {props.title}
@@ -405,36 +405,44 @@ export default function Window(props: {
       <div class="h-full overflow-auto">{props.children}</div>
       {/* Four corner resize handles */}
       <div
-        class="absolute left-0 top-0 w-4 h-4 cursor-nwse-resize flex items-start justify-start"
+        class="absolute left-0 top-0 w-6 h-6 flex items-start justify-start group"
         onMouseDown={(e) => onResizeMouseDown(e, "top-left")}
         onTouchStart={(e) => onResizeTouchStart(e, "top-left")}
-        style={{ "z-index": 100 }}
+        style={{ "z-index": 100, cursor: "nwse-resize" }}
       >
-        <div class="w-3 h-3 rounded-sm border  opacity-0" />
+        {/* iPad-style pill handle for mobile */}
+        <div class="w-3 h-2 rounded-full bg-blue-300 shadow-lg -rotate-45 sm:hidden mt-1 ml-1 hover:bg-blue-500 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(37,99,235,0.5)]"></div>
+        <div class="w-3 h-3 rounded-sm border opacity-0 group-hover:opacity-100 bg-white/70"></div>
       </div>
       <div
-        class="absolute right-0 top-0 w-4 h-4 cursor-nesw-resize flex items-start justify-end"
+        class="absolute right-0 top-0 w-6 h-6 flex items-start justify-end group"
         onMouseDown={(e) => onResizeMouseDown(e, "top-right")}
         onTouchStart={(e) => onResizeTouchStart(e, "top-right")}
-        style={{ "z-index": 100 }}
+        style={{ "z-index": 100, cursor: "nesw-resize" }}
       >
-        <div class="w-3 h-3 rounded-sm border  opacity-0" />
+        {/* iPad-style pill handle for mobile */}
+        <div class="w-3 h-3 rounded-sm border opacity-0 group-hover:opacity-100 bg-white/70"></div>
+        <div class="w-3 h-2 rounded-full bg-blue-300 shadow-lg rotate-45 sm:hidden mt-1 mr-1 hover:bg-blue-500 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(37,99,235,0.5)]"></div>
       </div>
       <div
-        class="absolute left-0 bottom-0 w-4 h-4 cursor-nesw-resize flex items-end justify-start"
+        class="absolute left-0 bottom-0 w-6 h-6 flex items-end justify-start group"
         onMouseDown={(e) => onResizeMouseDown(e, "bottom-left")}
         onTouchStart={(e) => onResizeTouchStart(e, "bottom-left")}
-        style={{ "z-index": 100 }}
+        style={{ "z-index": 100, cursor: "nesw-resize" }}
       >
-        <div class="w-3 h-3 rounded-sm border  opacity-0" />
+        {/* iPad-style pill handle for mobile */}
+        <div class="w-3 h-2 rounded-full bg-blue-300 shadow-lg rotate-45 sm:hidden mb-1 ml-1 hover:bg-blue-500 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(37,99,235,0.5)]"></div>
+        <div class="w-3 h-3 rounded-sm border opacity-0 group-hover:opacity-100 bg-white/70"></div>
       </div>
       <div
-        class="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize flex items-end justify-end"
+        class="absolute right-0 bottom-0 w-6 h-6 flex items-end justify-end group"
         onMouseDown={(e) => onResizeMouseDown(e, "bottom-right")}
         onTouchStart={(e) => onResizeTouchStart(e, "bottom-right")}
-        style={{ "z-index": 100 }}
+        style={{ "z-index": 100, cursor: "nwse-resize" }}
       >
-        <div class="w-3 h-3 rounded-sm border  opacity-0" />
+        {/* iPad-style pill handle for mobile */}
+        <div class="w-3 h-3 rounded-sm border opacity-0 group-hover:opacity-100 bg-white/70"></div>
+        <div class="w-3 h-2 rounded-full bg-blue-300 shadow-lg -rotate-45 sm:hidden mb-1 mr-1 hover:bg-blue-500 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(37,99,235,0.5)]"></div>
       </div>
       {/* Blocker overlay for all other windows when interacting - render as last child */}
     </div>

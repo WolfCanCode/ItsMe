@@ -123,19 +123,7 @@ export default function Home() {
         };
       }
     }
-    // Debug: log window and dock icon positions
-    const state = windowStates()[id] || DEFAULT_STATE;
-    const winCenterX = state.x + state.width / 2;
-    const winCenterY = state.y + state.height / 2;
-    if (minimizeTarget) {
-      console.log("Window center:", winCenterX, winCenterY);
-      console.log("Dock icon center:", minimizeTarget.x, minimizeTarget.y);
-      console.log(
-        "Delta:",
-        minimizeTarget.x - winCenterX,
-        minimizeTarget.y - winCenterY
-      );
-    }
+
     setWindowStatus((status) => ({
       ...status,
       [id]: { status: "minimizing", minimizeTarget },
@@ -176,7 +164,12 @@ export default function Home() {
       <DesktopIcons projects={projects} onOpen={openWindow} />
       <Dock
         projects={projects}
-        onOpen={openWindow}
+        onOpen={(id) => {
+          // Always bring to front and set active when clicking dock icon
+          openWindow(id);
+          bringToFront(id);
+          setActiveWindow(id);
+        }}
         minimizedIds={minimizedIds()}
         ref={(ref) => (dockRef = ref)}
         activeId={activeWindow() ?? undefined}
@@ -201,8 +194,10 @@ export default function Home() {
             onClose={() => closeWindow(project.id)}
             onMinimize={() => minimizeWindow(project.id)}
             onClick={() => {
-              bringToFront(project.id);
-              setActiveWindow(project.id);
+              if (activeWindow() !== project.id) {
+                bringToFront(project.id);
+                setActiveWindow(project.id);
+              }
             }}
             onMove={(x, y) => updateWindowState(project.id, { x, y })}
             onResize={(width, height) =>

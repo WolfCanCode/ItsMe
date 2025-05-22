@@ -32,6 +32,7 @@ export default function Window(props: {
   // For transform animation
   const [transform, setTransform] = createSignal("scale(1)");
   const [transitionEnabled, setTransitionEnabled] = createSignal(true);
+  const [showOverlay, setShowOverlay] = createSignal(false);
 
   // Listen for transition end to call onAnimationEnd
   onMount(() => {
@@ -100,6 +101,9 @@ export default function Window(props: {
   });
 
   function onMouseDown(e: MouseEvent) {
+    // Always bring to front and set active
+    if (props.onClick) props.onClick();
+    setShowOverlay(true);
     dragging = true;
     offset = {
       x: e.clientX,
@@ -130,11 +134,20 @@ export default function Window(props: {
     if (resizing) {
       resizing = false;
     }
+    setShowOverlay(false);
     window.removeEventListener("mousemove", onMouseMove);
     window.removeEventListener("mouseup", onMouseUp);
+    console.log("Window mouseup, dragging reset");
   }
 
+  // Ensure cleanup if component unmounts while dragging or resizing
+  onCleanup(() => {
+    window.removeEventListener("mousemove", onMouseMove);
+    window.removeEventListener("mouseup", onMouseUp);
+  });
+
   function handleContainerMouseDown(e: MouseEvent) {
+    console.log("Window clicked", props.title, dragging);
     if (!dragging && props.onClick) props.onClick();
   }
 
@@ -143,6 +156,7 @@ export default function Window(props: {
     corner: "top-left" | "top-right" | "bottom-left" | "bottom-right"
   ) {
     e.stopPropagation();
+    setShowOverlay(true);
     resizing = true;
     offset = { x: e.clientX, y: e.clientY };
     startSize = { width: props.width, height: props.height };
@@ -181,6 +195,7 @@ export default function Window(props: {
     }
     function onUp() {
       resizing = false;
+      setShowOverlay(false);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     }
@@ -214,6 +229,21 @@ export default function Window(props: {
       onMouseDown={handleContainerMouseDown}
       onContextMenu={(e) => e.preventDefault()}
     >
+      {showOverlay() && (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "100%",
+            height: "100%",
+            background: "transparent",
+            "z-index": 9999,
+            "pointer-events": "all",
+            cursor: resizing ? "nwse-resize" : dragging ? "move" : "default",
+          }}
+        />
+      )}
       <div
         class="flex items-center bg-gradient-to-r from-[#e2e8f0] to-[#f8fafc] rounded-t-xl px-4 py-2 cursor-grab border-b border-gray-200 shadow-sm"
         onMouseDown={onMouseDown}
@@ -221,10 +251,12 @@ export default function Window(props: {
         <span
           class="inline-block w-3 h-3 bg-[#ff5f56] rounded-full mr-2 border border-[#e33e41] cursor-pointer"
           onClick={props.onClose}
+          onMouseDown={(e) => e.stopPropagation()}
         />
         <span
           class="inline-block w-3 h-3 bg-[#ffbd2e] rounded-full mr-2 border border-[#e1a116] cursor-pointer"
           onClick={props.onMinimize}
+          onMouseDown={(e) => e.stopPropagation()}
         />
         <span
           class="ml-1 text-base font-bold text-gray-800 truncate"

@@ -142,10 +142,15 @@ export default function Home() {
     }));
   }
   function updateWindowState(id: string, state: Partial<WindowState>) {
-    setWindowStates((states) => ({
-      ...states,
-      [id]: { ...states[id], ...state },
-    }));
+    setWindowStates((states) => {
+      const prev = states[id] || DEFAULT_STATE;
+      // Clamp y so window can't go above 48px (menu bar height)
+      const newY = state.y !== undefined ? Math.max(state.y, 48) : prev.y;
+      return {
+        ...states,
+        [id]: { ...prev, ...state, y: newY },
+      };
+    });
   }
   function handleWindowAnimationEnd(id: string) {
     const status = windowStatus()[id]?.status;
@@ -174,6 +179,7 @@ export default function Home() {
         onOpen={openWindow}
         minimizedIds={minimizedIds()}
         ref={(ref) => (dockRef = ref)}
+        activeId={activeWindow() ?? undefined}
       />
       {projects.map((project) => {
         const isOpen = openIds().includes(project.id);

@@ -18,8 +18,17 @@ export default function MenuBar() {
 
   return (
     <div class="fixed top-0 left-0 w-full h-10 bg-white/20 backdrop-blur-md flex items-center px-4 z-[1000] shadow border-b border-white/30">
-      <span class="font-bold text-xl mr-8"></span>
-      <span class="ml-auto font-mono text-gray-700 mr-4">{time()}</span>
+      <div class="flex flex-row gap-2">
+        <div>
+          <img src="/images/tommy.png" alt="Tommy" class="h-8 w-auto" />
+        </div>
+        <span class="text-sm font-mono text-gray-700 my-auto">
+          Hi, I'm Tommy 😀
+        </span>
+      </div>
+      <span class="ml-auto text-xs font-mono text-gray-700 my-auto mr-4">
+        {time()}
+      </span>
     </div>
   );
 }

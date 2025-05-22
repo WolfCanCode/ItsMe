@@ -21,7 +21,11 @@ export const projects: Project[] = [
     id: "course-trainer",
     name: "Course Trainer",
     icon: () => (
-      <AppIcon src="/course-trainer.png" alt="Course Trainer" size={40} />
+      <AppIcon
+        src="/images/course-trainer.png"
+        alt="Course Trainer"
+        size={40}
+      />
     ),
     description:
       "AWS, Azure, Google Cloud, and more: interactive certification quizzes and training.",
@@ -31,27 +35,26 @@ export const projects: Project[] = [
     defaultHeight: 650,
   },
   {
-    id: "1",
-    name: "Portfolio Website",
-    icon: "🌐",
-    description: "My personal portfolio built with SolidJS and Tailwind.",
-    link: "https://your-portfolio.com",
-    component: PortfolioApp,
-  },
-  {
-    id: "2",
-    name: "Task Manager",
-    icon: "✅",
-    description: "A simple and elegant task manager app.",
-    link: "https://github.com/yourname/task-manager",
-    component: TaskManagerApp,
-  },
-  {
-    id: "3",
-    name: "Weather App",
-    icon: "☀️",
-    description: "A weather forecast app using OpenWeatherMap API.",
-    link: "https://github.com/yourname/weather-app",
-    component: WeatherApp,
+    id: "my-cv",
+    name: "My CV",
+    icon: () => <AppIcon src="/images/cv-logo.png" alt="CV Logo" size={40} />,
+    description: "View my curriculum vitae as a PDF.",
+    link: "/pdf/myCV.pdf",
+    component: () => (
+      <iframe
+        src="/pdf/myCV.pdf"
+        title="My CV PDF"
+        class="w-full h-full min-h-[300px] min-w-[250px] rounded-lg border-0"
+        style={{
+          height: "100%",
+          width: "100%",
+          border: "none",
+          background: "#fff",
+        }}
+        allow="fullscreen"
+      />
+    ),
+    defaultWidth: 800,
+    defaultHeight: 1000,
   },
 ];

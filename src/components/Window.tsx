@@ -138,13 +138,54 @@ export default function Window(props: {
     if (!dragging && props.onClick) props.onClick();
   }
 
-  function onResizeMouseDown(e: MouseEvent) {
+  function onResizeMouseDown(
+    e: MouseEvent,
+    corner: "top-left" | "top-right" | "bottom-left" | "bottom-right"
+  ) {
     e.stopPropagation();
     resizing = true;
     offset = { x: e.clientX, y: e.clientY };
     startSize = { width: props.width, height: props.height };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    startPos = { x: props.x, y: props.y };
+    function onMove(ev: MouseEvent) {
+      let newX = startPos.x;
+      let newY = startPos.y;
+      let newWidth = startSize.width;
+      let newHeight = startSize.height;
+      const dx = ev.clientX - offset.x;
+      const dy = ev.clientY - offset.y;
+      if (corner === "top-left") {
+        newX = startPos.x + dx;
+        newY = startPos.y + dy;
+        newWidth = Math.max(250, startSize.width - dx);
+        newHeight = Math.max(150, startSize.height - dy);
+      } else if (corner === "top-right") {
+        newY = startPos.y + dy;
+        newWidth = Math.max(250, startSize.width + dx);
+        newHeight = Math.max(150, startSize.height - dy);
+      } else if (corner === "bottom-left") {
+        newX = startPos.x + dx;
+        newWidth = Math.max(250, startSize.width - dx);
+        newHeight = Math.max(150, startSize.height + dy);
+      } else if (corner === "bottom-right") {
+        newWidth = Math.max(250, startSize.width + dx);
+        newHeight = Math.max(150, startSize.height + dy);
+      }
+      // Clamp minimum size
+      if (newWidth !== props.width || newHeight !== props.height) {
+        props.onResize(newWidth, newHeight);
+      }
+      if (newX !== props.x || newY !== props.y) {
+        props.onMove(newX, newY);
+      }
+    }
+    function onUp() {
+      resizing = false;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
   }
 
   return (
@@ -171,6 +212,7 @@ export default function Window(props: {
           props.minimized && props.status === "open" ? "none" : undefined,
       }}
       onMouseDown={handleContainerMouseDown}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div
         class="flex items-center bg-gradient-to-r from-[#e2e8f0] to-[#f8fafc] rounded-t-xl px-4 py-2 cursor-grab border-b border-gray-200 shadow-sm"
@@ -192,12 +234,34 @@ export default function Window(props: {
         </span>
       </div>
       <div class="h-full overflow-auto">{props.children}</div>
+      {/* Four corner resize handles */}
       <div
-        class="absolute right-1 bottom-1 w-4 h-4 cursor-nwse-resize flex items-end justify-end"
-        onMouseDown={onResizeMouseDown}
+        class="absolute left-0 top-0 w-4 h-4 cursor-nwse-resize flex items-start justify-start"
+        onMouseDown={(e) => onResizeMouseDown(e, "top-left")}
         style={{ "z-index": 100 }}
       >
-        <div class="w-3 h-3 bg-gray-300 rounded-sm border border-gray-400 opacity-70" />
+        <div class="w-3 h-3 rounded-sm border  opacity-0" />
+      </div>
+      <div
+        class="absolute right-0 top-0 w-4 h-4 cursor-nesw-resize flex items-start justify-end"
+        onMouseDown={(e) => onResizeMouseDown(e, "top-right")}
+        style={{ "z-index": 100 }}
+      >
+        <div class="w-3 h-3 rounded-sm border  opacity-0" />
+      </div>
+      <div
+        class="absolute left-0 bottom-0 w-4 h-4 cursor-nesw-resize flex items-end justify-start"
+        onMouseDown={(e) => onResizeMouseDown(e, "bottom-left")}
+        style={{ "z-index": 100 }}
+      >
+        <div class="w-3 h-3 rounded-sm border  opacity-0" />
+      </div>
+      <div
+        class="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize flex items-end justify-end"
+        onMouseDown={(e) => onResizeMouseDown(e, "bottom-right")}
+        style={{ "z-index": 100 }}
+      >
+        <div class="w-3 h-3 rounded-sm border  opacity-0" />
       </div>
     </div>
   );

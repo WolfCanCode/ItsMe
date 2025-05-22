@@ -10,6 +10,7 @@ export default function Dock(props: {
   onOpen: (id: string) => void;
   minimizedIds?: string[];
   ref?: (ref: DockRef) => void;
+  activeId?: string;
 }) {
   let iconRefs: Record<string, HTMLButtonElement | undefined> = {};
 
@@ -35,7 +36,15 @@ export default function Dock(props: {
           {/* The button wraps only the icon, so any click on the icon triggers onOpen */}
           <button
             ref={(el) => (iconRefs[project.id] = el)}
-            class="relative z-10 bg-none border-none text-4xl cursor-pointer focus:outline-none transition-transform duration-150 hover:scale-125 hover:shadow-lg"
+            class={`relative z-10 bg-white text-4xl cursor-pointer focus:outline-none transition-transform duration-150 hover:scale-125 hover:shadow-lg
+              ${
+                props.activeId === project.id
+                  ? "border-2 border-blue-600"
+                  : props.minimizedIds?.includes(project.id)
+                  ? "border-2 border-blue-300"
+                  : "border-2 border-transparent"
+              }
+              rounded-xl p-1 overflow-visible`}
             title={project.name}
             onClick={() => props.onOpen(project.id)}
             type="button"
@@ -48,13 +57,6 @@ export default function Dock(props: {
               project.icon()
             )}
           </button>
-          <span
-            class={`w-2 h-2 rounded-full bg-blue-500 mt-1 transition-opacity duration-200 ${
-              props.minimizedIds?.includes(project.id)
-                ? "opacity-100"
-                : "opacity-0"
-            }`}
-          />
         </div>
       ))}
     </div>

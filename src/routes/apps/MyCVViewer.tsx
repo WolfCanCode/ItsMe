@@ -1,12 +1,10 @@
 import { JSX } from "solid-js";
 
-const CourseTrainerApp = (): JSX.Element => {
-  console.log("CourseTrainerApp mounted");
-
+export default function MyCVViewer(): JSX.Element {
   return (
     <iframe
-      src="https://course-trainer.vercel.app/"
-      title="Course Trainer"
+      src="/pdf/myCV.pdf"
+      title="My CV PDF"
       class="w-full h-full min-h-[300px] min-w-[250px] rounded-lg border-0"
       style={{
         height: "100%",
@@ -14,9 +12,7 @@ const CourseTrainerApp = (): JSX.Element => {
         border: "none",
         background: "#fff",
       }}
-      allow="clipboard-write; fullscreen"
+      allow="fullscreen"
     />
   );
-};
-
-export default CourseTrainerApp;
+}

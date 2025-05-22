@@ -22,6 +22,7 @@ export default function Window(props: {
   children?: JSX.Element;
   minimized?: boolean;
 }) {
+  console.log("Window mounted", props.title);
   let dragging = false;
   let resizing = false;
   let offset = { x: 0, y: 0 };

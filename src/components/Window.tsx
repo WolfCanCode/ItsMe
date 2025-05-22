@@ -381,22 +381,26 @@ export default function Window(props: {
         />
       )}
       <div
-        class="flex items-center bg-gradient-to-r from-[#e2e8f0] to-[#f8fafc] rounded-t-xl px-4 py-2 cursor-grab border-b border-gray-200 shadow-sm"
+        class="flex gap-2 sm:gap-0 items-center bg-gradient-to-r from-[#e2e8f0] to-[#f8fafc] rounded-t-xl px-4 py-3 sm:py-2 cursor-grab border-b border-gray-200 shadow-sm"
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
       >
+        <div class="p-0 flex items-center justify-center">
+          <span
+            class="inline-block w-4 h-4 sm:w-3 sm:h-3 bg-[#ff5f56] rounded-full mr-0 sm:mr-2 border border-[#e33e41] cursor-pointer transition-transform transition-shadow duration-150 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(255,95,86,0.5)]"
+            onClick={props.onClose}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+        </div>
+        <div class="p-0 flex items-center justify-center">
+          <span
+            class="inline-block w-4 h-4 sm:w-3 sm:h-3 bg-[#ffbd2e] rounded-full mr-0 sm:mr-2 border border-[#e1a116] cursor-pointer transition-transform transition-shadow duration-150 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(255,189,46,0.5)]"
+            onClick={props.onMinimize}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+        </div>
         <span
-          class="inline-block w-3 h-3 bg-[#ff5f56] rounded-full mr-2 border border-[#e33e41] cursor-pointer transition-transform transition-shadow duration-150 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(255,95,86,0.5)]"
-          onClick={props.onClose}
-          onMouseDown={(e) => e.stopPropagation()}
-        />
-        <span
-          class="inline-block w-3 h-3 bg-[#ffbd2e] rounded-full mr-2 border border-[#e1a116] cursor-pointer transition-transform transition-shadow duration-150 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(255,189,46,0.5)]"
-          onClick={props.onMinimize}
-          onMouseDown={(e) => e.stopPropagation()}
-        />
-        <span
-          class="ml-1 text-sm font-medium text-gray-800 truncate"
+          class="ml-1 text-base sm:text-sm font-medium text-gray-800 truncate"
           style="max-width: 260px;"
         >
           {props.title}

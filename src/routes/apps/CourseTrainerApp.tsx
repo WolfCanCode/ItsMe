@@ -1,8 +1,6 @@
 import { JSX } from "solid-js";
 
 const CourseTrainerApp = (): JSX.Element => {
-  console.log("CourseTrainerApp mounted");
-
   return (
     <iframe
       src="https://course-trainer.vercel.app/"

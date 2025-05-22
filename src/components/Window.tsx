@@ -27,7 +27,6 @@ export default function Window(props: {
   setInteractingWindowId?: (id: string | null) => void;
   setIsInteracting?: (v: boolean) => void;
 }) {
-  console.log("Window mounted", props.title);
   let dragging = false;
   let resizing = false;
   let offset = { x: 0, y: 0 };
@@ -207,11 +206,9 @@ export default function Window(props: {
     props.setIsInteracting?.(false);
     // Restore overflow scroll
     document.body.style.overflow = "";
-    console.log("Window mouseup, dragging reset");
   }
 
   function handleContainerMouseDown(e: MouseEvent) {
-    console.log("Window clicked", props.title, dragging);
     if (!dragging && props.onClick) props.onClick();
   }
 

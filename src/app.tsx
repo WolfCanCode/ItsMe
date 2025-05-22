@@ -3,8 +3,10 @@ import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import { MetaProvider, Title, Meta, Link } from "@solidjs/meta";
 import "./app.css";
+import { inject } from "@vercel/analytics";
 
 export default function App() {
+  inject();
   return (
     <MetaProvider>
       <Title>WolfCanCode OS – macOS-style Portfolio</Title>

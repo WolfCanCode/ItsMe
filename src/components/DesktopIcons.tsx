@@ -19,7 +19,7 @@ export default function DesktopIcons(props: {
               {project.icon}
             </span>
           ) : (
-            project.icon
+            project.icon()
           )}
           <span class="mt-1 text-xs text-gray-800 bg-white/70 rounded px-1 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors z-10">
             {project.name}

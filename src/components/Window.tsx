@@ -20,6 +20,7 @@ export default function Window(props: {
   restoreFrom?: { x: number; y: number };
   onAnimationEnd?: () => void;
   children?: JSX.Element;
+  minimized?: boolean;
 }) {
   let dragging = false;
   let resizing = false;
@@ -166,6 +167,8 @@ export default function Window(props: {
         overflow: "hidden",
         "z-index": props.zIndex ?? 50,
         transform: transform(),
+        display:
+          props.minimized && props.status === "open" ? "none" : undefined,
       }}
       onMouseDown={handleContainerMouseDown}
     >

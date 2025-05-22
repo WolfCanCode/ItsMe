@@ -346,7 +346,7 @@ export default function Window(props: {
           : ""
       } ${
         props.isActive
-          ? "ring-2 ring-blue-400 shadow-2xl shadow-blue-200"
+          ? "ring-1 ring-blue-400 shadow-2xl shadow-blue-200"
           : "shadow-lg"
       }`}
       style={{

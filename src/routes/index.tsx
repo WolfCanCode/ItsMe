@@ -30,6 +30,14 @@ const [interactingWindowId, setInteractingWindowId] = createSignal<
 >(null);
 const [isInteracting, setIsInteracting] = createSignal(false);
 
+// Utility to detect mobile
+function isMobile() {
+  if (typeof window === "undefined") return false;
+  return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
 export default function Home() {
   const [openIds, setOpenIds] = createSignal<string[]>([]);
   const [minimizedIds, setMinimizedIds] = createSignal<string[]>([]);
@@ -68,8 +76,12 @@ export default function Home() {
   function openWindow(id: string) {
     const project = projects.find((p) => p.id === id);
     if (!project) return;
-    const defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
-    const defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
+    let defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
+    let defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
+    if (isMobile()) {
+      defaultWidth = Math.floor(window.innerWidth * 0.9);
+      defaultHeight = Math.floor(window.innerHeight * 0.6);
+    }
     if (minimizedIds().includes(id)) {
       let restoreFrom: { x: number; y: number } | undefined = undefined;
       if (dockRef) {

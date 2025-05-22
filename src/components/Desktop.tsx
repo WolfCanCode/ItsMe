@@ -11,10 +11,10 @@ export default function Desktop(props: { children?: JSX.Element }) {
     );
   }
 
-  const [bg, setBg] = createSignal("/images/wallpapers/mywall.png");
+  const [bg, setBg] = createSignal("/wallpapers/mywall.png");
   onMount(() => {
     if (isMobile()) {
-      setBg("/images/wallpapers/mywall-mobile.png");
+      setBg("/wallpapers/mywall-mobile.jpg");
     }
   });
 

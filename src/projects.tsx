@@ -1,8 +1,8 @@
 import { JSX, Component } from "solid-js";
 import AppIcon from "./components/AppIcon";
-import MyCVViewer from "./routes/apps/MyCVViewer";
+import MyCVViewer from "./routes/apps/MyCVViewerApp";
 import CourseTrainerApp from "./routes/apps/CourseTrainerApp";
-
+import InterviewTrainerApp from "./routes/apps/InterviewTrainerApp";
 export interface Project {
   id: string;
   name: string;
@@ -41,5 +41,22 @@ export const projects: Project[] = [
     component: MyCVViewer,
     defaultWidth: 800,
     defaultHeight: 1000,
+  },
+  {
+    id: "interview-trainer",
+    name: "Interview Trainer",
+    icon: () => (
+      <AppIcon
+        src="/images/interview-trainer.png"
+        alt="Interview Trainer"
+        size={40}
+      />
+    ),
+    description:
+      "Sharpen your skills and ace your next interview with AI-powered practice.",
+    link: "https://interview-ai-trainer.vercel.app/vi",
+    component: InterviewTrainerApp,
+    defaultWidth: 900,
+    defaultHeight: 650,
   },
 ];

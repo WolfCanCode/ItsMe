@@ -21,6 +21,7 @@ export default function Window(props: {
   onAnimationEnd?: () => void;
   children?: JSX.Element;
   minimized?: boolean;
+  isOpen?: boolean;
 }) {
   console.log("Window mounted", props.title);
   let dragging = false;
@@ -101,6 +102,22 @@ export default function Window(props: {
     }
   });
 
+  onMount(() => {
+    // Dragging and resizing event listeners
+    function handleMouseMove(e: MouseEvent) {
+      onMouseMove(e);
+    }
+    function handleMouseUp(e: MouseEvent) {
+      onMouseUp();
+    }
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    onCleanup(() => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    });
+  });
+
   function onMouseDown(e: MouseEvent) {
     // Always bring to front and set active
     if (props.onClick) props.onClick();
@@ -111,8 +128,6 @@ export default function Window(props: {
       y: e.clientY,
     };
     startPos = { x: props.x, y: props.y };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
   }
 
   function onMouseMove(e: MouseEvent) {
@@ -136,16 +151,8 @@ export default function Window(props: {
       resizing = false;
     }
     setShowOverlay(false);
-    window.removeEventListener("mousemove", onMouseMove);
-    window.removeEventListener("mouseup", onMouseUp);
     console.log("Window mouseup, dragging reset");
   }
-
-  // Ensure cleanup if component unmounts while dragging or resizing
-  onCleanup(() => {
-    window.removeEventListener("mousemove", onMouseMove);
-    window.removeEventListener("mouseup", onMouseUp);
-  });
 
   function handleContainerMouseDown(e: MouseEvent) {
     console.log("Window clicked", props.title, dragging);
@@ -225,7 +232,11 @@ export default function Window(props: {
         "z-index": props.zIndex ?? 50,
         transform: transform(),
         display:
-          props.minimized && props.status === "open" ? "none" : undefined,
+          props.isOpen === false
+            ? "none"
+            : props.minimized && props.status === "open"
+            ? "none"
+            : undefined,
       }}
       onMouseDown={handleContainerMouseDown}
       onContextMenu={(e) => e.preventDefault()}

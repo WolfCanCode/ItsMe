@@ -176,14 +176,12 @@ export default function Home() {
       />
       {projects.map((project) => {
         const isOpen = openIds().includes(project.id);
-        // Always render if open, let Window handle animation/visibility
-        if (!isOpen) return null;
         const zIndex = 100 + openIds().indexOf(project.id);
-        // Use project default size if available
         const defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
         const defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
         return (
           <Window
+            isOpen={isOpen}
             title={project.name}
             x={windowStates()[project.id]?.x ?? DEFAULT_STATE.x}
             y={windowStates()[project.id]?.y ?? DEFAULT_STATE.y}

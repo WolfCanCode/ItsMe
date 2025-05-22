@@ -81,6 +81,11 @@ export default function Home() {
     if (isMobile()) {
       defaultWidth = Math.floor(window.innerWidth * 0.9);
       defaultHeight = Math.floor(window.innerHeight * 0.6);
+      var defaultX = 10;
+      var defaultY = 10;
+    } else {
+      var defaultX = DEFAULT_STATE.x;
+      var defaultY = DEFAULT_STATE.y;
     }
     if (minimizedIds().includes(id)) {
       let restoreFrom: { x: number; y: number } | undefined = undefined;
@@ -112,8 +117,8 @@ export default function Home() {
       setWindowStates((states) => ({
         ...states,
         [id]: states[id] || {
-          x: DEFAULT_STATE.x,
-          y: DEFAULT_STATE.y,
+          x: defaultX,
+          y: defaultY,
           width: defaultWidth,
           height: defaultHeight,
         },

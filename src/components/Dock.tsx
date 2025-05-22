@@ -41,7 +41,7 @@ export default function Dock(props: {
                 props.activeId === project.id
                   ? "border-2 border-blue-600"
                   : props.minimizedIds?.includes(project.id)
-                  ? "border-b-2 border-teal-600"
+                  ? "border-b-2 border-blue-600"
                   : "border-b-2 border-transparent"
               }
               rounded-xl p-1 overflow-visible`}

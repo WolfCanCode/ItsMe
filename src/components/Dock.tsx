@@ -25,7 +25,7 @@ export default function Dock(props: {
   });
 
   return (
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/30 backdrop-blur-md rounded-2xl px-8 py-3 flex shadow-2xl z-50 border border-white/40">
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/30 backdrop-blur-md rounded-2xl px-8 py-3 flex shadow-2xl z-[9999] border border-white/40">
       {props.projects.map((project) => (
         <div
           class="flex flex-col items-center mx-3 relative"

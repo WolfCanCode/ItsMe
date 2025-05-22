@@ -22,6 +22,10 @@ export default function Window(props: {
   children?: JSX.Element;
   minimized?: boolean;
   isOpen?: boolean;
+  isInteracting?: boolean;
+  interactingWindowId?: string | null;
+  setInteractingWindowId?: (id: string | null) => void;
+  setIsInteracting?: (v: boolean) => void;
 }) {
   console.log("Window mounted", props.title);
   let dragging = false;
@@ -89,16 +93,19 @@ export default function Window(props: {
         const winCenterX = props.x + props.width / 2;
         const winCenterY = props.y + props.height / 2;
         const dx = props.minimizeTarget!.x - winCenterX;
-        const dy = props.minimizeTarget!.y - winCenterY;
-        setTransform(`translate(${dx}px, ${dy}px) scale(0.1)`);
+        const dy = props.minimizeTarget!.y - winCenterY - 20;
+        setTransform(`translate(${dx}px, ${dy}px) scale(0.01)`);
       });
     } else if (props.status === "closing") {
       setTransitionEnabled(true);
       if (contentRef) contentRef.offsetWidth; // force reflow
-      setTransform("scale(0.1)");
+      setTransform("scale(0.01)");
     } else if (!props.restoreFrom) {
       setTransitionEnabled(true);
-      setTransform("scale(1)");
+      setTransform("scale(1.01)");
+      setTimeout(() => {
+        setTransform("scale(1)");
+      }, 100);
     }
   });
 
@@ -128,6 +135,9 @@ export default function Window(props: {
       y: e.clientY,
     };
     startPos = { x: props.x, y: props.y };
+    // Set global interaction state
+    props.setInteractingWindowId?.(props.title);
+    props.setIsInteracting?.(true);
   }
 
   function onMouseMove(e: MouseEvent) {
@@ -151,6 +161,9 @@ export default function Window(props: {
       resizing = false;
     }
     setShowOverlay(false);
+    // Clear global interaction state
+    props.setInteractingWindowId?.(null);
+    props.setIsInteracting?.(false);
     console.log("Window mouseup, dragging reset");
   }
 
@@ -169,6 +182,9 @@ export default function Window(props: {
     offset = { x: e.clientX, y: e.clientY };
     startSize = { width: props.width, height: props.height };
     startPos = { x: props.x, y: props.y };
+    // Set global interaction state for resizing
+    props.setInteractingWindowId?.(props.title);
+    props.setIsInteracting?.(true);
     function onMove(ev: MouseEvent) {
       let newX = startPos.x;
       let newY = startPos.y;
@@ -204,6 +220,9 @@ export default function Window(props: {
     function onUp() {
       resizing = false;
       setShowOverlay(false);
+      // Clear global interaction state
+      props.setInteractingWindowId?.(null);
+      props.setIsInteracting?.(false);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     }
@@ -261,12 +280,12 @@ export default function Window(props: {
         onMouseDown={onMouseDown}
       >
         <span
-          class="inline-block w-3 h-3 bg-[#ff5f56] rounded-full mr-2 border border-[#e33e41] cursor-pointer"
+          class="inline-block w-3 h-3 bg-[#ff5f56] rounded-full mr-2 border border-[#e33e41] cursor-pointer transition-transform transition-shadow duration-150 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(255,95,86,0.5)]"
           onClick={props.onClose}
           onMouseDown={(e) => e.stopPropagation()}
         />
         <span
-          class="inline-block w-3 h-3 bg-[#ffbd2e] rounded-full mr-2 border border-[#e1a116] cursor-pointer"
+          class="inline-block w-3 h-3 bg-[#ffbd2e] rounded-full mr-2 border border-[#e1a116] cursor-pointer transition-transform transition-shadow duration-150 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(255,189,46,0.5)]"
           onClick={props.onMinimize}
           onMouseDown={(e) => e.stopPropagation()}
         />
@@ -307,6 +326,7 @@ export default function Window(props: {
       >
         <div class="w-3 h-3 rounded-sm border  opacity-0" />
       </div>
+      {/* Blocker overlay for all other windows when interacting - render as last child */}
     </div>
   );
 }

@@ -24,6 +24,12 @@ type WindowStatus = {
 const DEFAULT_STATE: WindowState = { x: 200, y: 100, width: 400, height: 300 };
 const STORAGE_KEY = "wolfcancode-os-state";
 
+// Add global signals for interaction state
+const [interactingWindowId, setInteractingWindowId] = createSignal<
+  string | null
+>(null);
+const [isInteracting, setIsInteracting] = createSignal(false);
+
 export default function Home() {
   const [openIds, setOpenIds] = createSignal<string[]>([]);
   const [minimizedIds, setMinimizedIds] = createSignal<string[]>([]);
@@ -107,6 +113,9 @@ export default function Home() {
   }
   function closeWindow(id: string) {
     setWindowStatus((status) => ({ ...status, [id]: { status: "closing" } }));
+    if (activeWindow() === id) {
+      setActiveWindow(null);
+    }
   }
   function bringToFront(id: string) {
     setOpenIds((ids) => {
@@ -176,6 +185,20 @@ export default function Home() {
         ref={(ref) => (dockRef = ref)}
         activeId={activeWindow() ?? undefined}
       />
+      {/* Global overlay to block mouse events during drag/resize */}
+      {isInteracting() && (
+        <div
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            width: "100vw",
+            height: "100vh",
+            "z-index": 9999,
+            "pointer-events": "all",
+          }}
+        />
+      )}
       <Window
         isOpen={openIds().includes("course-trainer")}
         title="Course Trainer"
@@ -202,6 +225,9 @@ export default function Home() {
         minimizeTarget={windowStatus()["course-trainer"]?.minimizeTarget}
         restoreFrom={windowStatus()["course-trainer"]?.restoreFrom}
         minimized={minimizedIds().includes("course-trainer")}
+        isInteracting={interactingWindowId() === "course-trainer"}
+        setInteractingWindowId={setInteractingWindowId}
+        setIsInteracting={setIsInteracting}
       >
         <CourseTrainerApp />
       </Window>
@@ -231,6 +257,9 @@ export default function Home() {
         minimizeTarget={windowStatus()["my-cv"]?.minimizeTarget}
         restoreFrom={windowStatus()["my-cv"]?.restoreFrom}
         minimized={minimizedIds().includes("my-cv")}
+        isInteracting={interactingWindowId() === "my-cv"}
+        setInteractingWindowId={setInteractingWindowId}
+        setIsInteracting={setIsInteracting}
       >
         <MyCVViewer />
       </Window>
@@ -260,6 +289,9 @@ export default function Home() {
         minimizeTarget={windowStatus()["interview-trainer"]?.minimizeTarget}
         restoreFrom={windowStatus()["interview-trainer"]?.restoreFrom}
         minimized={minimizedIds().includes("interview-trainer")}
+        isInteracting={interactingWindowId() === "interview-trainer"}
+        setInteractingWindowId={setInteractingWindowId}
+        setIsInteracting={setIsInteracting}
       >
         <InterviewTrainerApp />
       </Window>

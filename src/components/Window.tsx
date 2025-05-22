@@ -140,6 +140,41 @@ export default function Window(props: {
     props.setIsInteracting?.(true);
   }
 
+  // Touch support for dragging
+  function onTouchStart(e: TouchEvent) {
+    if (props.onClick) props.onClick();
+    setShowOverlay(true);
+    dragging = true;
+    const touch = e.touches[0];
+    offset = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+    startPos = { x: props.x, y: props.y };
+    // Set global interaction state
+    props.setInteractingWindowId?.(props.title);
+    props.setIsInteracting?.(true);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+  }
+  function onTouchMove(e: TouchEvent) {
+    if (!dragging) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const newX = startPos.x + (touch.clientX - offset.x);
+    const newY = startPos.y + (touch.clientY - offset.y);
+    props.onMove(newX, newY);
+  }
+  function onTouchEnd() {
+    dragging = false;
+    setShowOverlay(false);
+    // Clear global interaction state
+    props.setInteractingWindowId?.(null);
+    props.setIsInteracting?.(false);
+    window.removeEventListener("touchmove", onTouchMove);
+    window.removeEventListener("touchend", onTouchEnd);
+  }
+
   function onMouseMove(e: MouseEvent) {
     if (dragging) {
       const newX = startPos.x + (e.clientX - offset.x);
@@ -230,6 +265,66 @@ export default function Window(props: {
     window.addEventListener("mouseup", onUp);
   }
 
+  // Touch support for resizing
+  function onResizeTouchStart(
+    e: TouchEvent,
+    corner: "top-left" | "top-right" | "bottom-left" | "bottom-right"
+  ) {
+    e.stopPropagation();
+    setShowOverlay(true);
+    resizing = true;
+    const touch = e.touches[0];
+    offset = { x: touch.clientX, y: touch.clientY };
+    startSize = { width: props.width, height: props.height };
+    startPos = { x: props.x, y: props.y };
+    // Set global interaction state for resizing
+    props.setInteractingWindowId?.(props.title);
+    props.setIsInteracting?.(true);
+    function onMove(ev: TouchEvent) {
+      const t = ev.touches[0];
+      let newX = startPos.x;
+      let newY = startPos.y;
+      let newWidth = startSize.width;
+      let newHeight = startSize.height;
+      const dx = t.clientX - offset.x;
+      const dy = t.clientY - offset.y;
+      if (corner === "top-left") {
+        newX = startPos.x + dx;
+        newY = startPos.y + dy;
+        newWidth = Math.max(250, startSize.width - dx);
+        newHeight = Math.max(150, startSize.height - dy);
+      } else if (corner === "top-right") {
+        newY = startPos.y + dy;
+        newWidth = Math.max(250, startSize.width + dx);
+        newHeight = Math.max(150, startSize.height - dy);
+      } else if (corner === "bottom-left") {
+        newX = startPos.x + dx;
+        newWidth = Math.max(250, startSize.width - dx);
+        newHeight = Math.max(150, startSize.height + dy);
+      } else if (corner === "bottom-right") {
+        newWidth = Math.max(250, startSize.width + dx);
+        newHeight = Math.max(150, startSize.height + dy);
+      }
+      if (newWidth !== props.width || newHeight !== props.height) {
+        props.onResize(newWidth, newHeight);
+      }
+      if (newX !== props.x || newY !== props.y) {
+        props.onMove(newX, newY);
+      }
+    }
+    function onUp() {
+      resizing = false;
+      setShowOverlay(false);
+      // Clear global interaction state
+      props.setInteractingWindowId?.(null);
+      props.setIsInteracting?.(false);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    }
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  }
+
   return (
     <div
       ref={contentRef}
@@ -259,6 +354,7 @@ export default function Window(props: {
       }}
       onMouseDown={handleContainerMouseDown}
       onContextMenu={(e) => e.preventDefault()}
+      onTouchStart={onTouchStart}
     >
       {showOverlay() && (
         <div
@@ -278,6 +374,7 @@ export default function Window(props: {
       <div
         class="flex items-center bg-gradient-to-r from-[#e2e8f0] to-[#f8fafc] rounded-t-xl px-4 py-2 cursor-grab border-b border-gray-200 shadow-sm"
         onMouseDown={onMouseDown}
+        onTouchStart={onTouchStart}
       >
         <span
           class="inline-block w-3 h-3 bg-[#ff5f56] rounded-full mr-2 border border-[#e33e41] cursor-pointer transition-transform transition-shadow duration-150 hover:scale-125 hover:shadow-[0_0_6px_2px_rgba(255,95,86,0.5)]"
@@ -301,6 +398,7 @@ export default function Window(props: {
       <div
         class="absolute left-0 top-0 w-4 h-4 cursor-nwse-resize flex items-start justify-start"
         onMouseDown={(e) => onResizeMouseDown(e, "top-left")}
+        onTouchStart={(e) => onResizeTouchStart(e, "top-left")}
         style={{ "z-index": 100 }}
       >
         <div class="w-3 h-3 rounded-sm border  opacity-0" />
@@ -308,6 +406,7 @@ export default function Window(props: {
       <div
         class="absolute right-0 top-0 w-4 h-4 cursor-nesw-resize flex items-start justify-end"
         onMouseDown={(e) => onResizeMouseDown(e, "top-right")}
+        onTouchStart={(e) => onResizeTouchStart(e, "top-right")}
         style={{ "z-index": 100 }}
       >
         <div class="w-3 h-3 rounded-sm border  opacity-0" />
@@ -315,6 +414,7 @@ export default function Window(props: {
       <div
         class="absolute left-0 bottom-0 w-4 h-4 cursor-nesw-resize flex items-end justify-start"
         onMouseDown={(e) => onResizeMouseDown(e, "bottom-left")}
+        onTouchStart={(e) => onResizeTouchStart(e, "bottom-left")}
         style={{ "z-index": 100 }}
       >
         <div class="w-3 h-3 rounded-sm border  opacity-0" />
@@ -322,6 +422,7 @@ export default function Window(props: {
       <div
         class="absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize flex items-end justify-end"
         onMouseDown={(e) => onResizeMouseDown(e, "bottom-right")}
+        onTouchStart={(e) => onResizeTouchStart(e, "bottom-right")}
         style={{ "z-index": 100 }}
       >
         <div class="w-3 h-3 rounded-sm border  opacity-0" />

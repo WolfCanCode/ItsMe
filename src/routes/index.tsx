@@ -140,6 +140,10 @@ export default function Home() {
       ...status,
       [id]: { status: "minimizing", minimizeTarget },
     }));
+    // If the minimized window is active, clear activeWindow
+    if (activeWindow() === id) {
+      setActiveWindow(null);
+    }
   }
   function updateWindowState(id: string, state: Partial<WindowState>) {
     setWindowStates((states) => {

@@ -36,13 +36,13 @@ export default function Dock(props: {
           {/* The button wraps only the icon, so any click on the icon triggers onOpen */}
           <button
             ref={(el) => (iconRefs[project.id] = el)}
-            class={`relative z-10 bg-white text-4xl cursor-pointer focus:outline-none transition-transform duration-150 hover:scale-125 hover:shadow-lg
+            class={`relative z-10 bg-white  text-4xl cursor-pointer focus:outline-none transition-all duration-200 hover:scale-125 hover:shadow-lg 
               ${
                 props.activeId === project.id
                   ? "border-2 border-blue-600"
                   : props.minimizedIds?.includes(project.id)
-                  ? "border-2 border-blue-300"
-                  : "border-2 border-transparent"
+                  ? "border-b-2 border-teal-600"
+                  : "border-b-2 border-transparent"
               }
               rounded-xl p-1 overflow-visible`}
             title={project.name}

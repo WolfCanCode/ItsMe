@@ -23,7 +23,7 @@ export default function MenuBar() {
           <img src="/images/tommy.png" alt="Tommy" class="h-8 w-auto" />
         </div>
         <span class="text-sm font-mono text-gray-700 my-auto">
-          Hi, I'm Tommy 😀
+          Hi, I'm Tommy! 👋
         </span>
       </div>
       <span class="ml-auto text-xs font-mono text-gray-700 my-auto mr-4">

@@ -17,6 +17,8 @@ export default function MyCVViewer(): JSX.Element {
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
   const [ready, setReady] = createSignal(false);
+  /** Bumped on container resize so the current page re-renders at the new width. */
+  const [sizeTick, setSizeTick] = createSignal(0);
 
   let canvasRef: HTMLCanvasElement | undefined;
   let containerRef: HTMLDivElement | undefined;
@@ -64,6 +66,7 @@ export default function MyCVViewer(): JSX.Element {
 
   onMount(() => {
     let cancelled = false;
+    let resizeTimer: number | undefined;
 
     (async () => {
       try {
@@ -89,8 +92,18 @@ export default function MyCVViewer(): JSX.Element {
       }
     })();
 
+    const ro = new ResizeObserver(() => {
+      if (resizeTimer !== undefined) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        setSizeTick((n) => n + 1);
+      }, 80);
+    });
+    if (containerRef) ro.observe(containerRef);
+
     onCleanup(() => {
       cancelled = true;
+      if (resizeTimer !== undefined) window.clearTimeout(resizeTimer);
+      ro.disconnect();
       cancelRender();
       void pdfDoc?.destroy();
       pdfDoc = null;
@@ -100,6 +113,7 @@ export default function MyCVViewer(): JSX.Element {
   createEffect(() => {
     if (!ready()) return;
     const pageNum = page();
+    sizeTick(); // re-render when container size changes
     void renderPage(pageNum);
   });
 

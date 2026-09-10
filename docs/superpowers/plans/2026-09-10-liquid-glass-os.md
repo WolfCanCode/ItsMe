@@ -685,17 +685,17 @@ git commit -m "feat: polish About Tommy and icons; fix InterviewTrainer export"
 
 **Files:** none (verification only)
 
-- [ ] **Step 1: Run unit tests**
+- [x] **Step 1: Run unit tests**
 
 Run: `pnpm test`  
 Expected: PASS
 
-- [ ] **Step 2: Production build**
+- [x] **Step 2: Production build**
 
 Run: `pnpm build`  
 Expected: success
 
-- [ ] **Step 3: Spec checklist in browser (`pnpm dev`)**
+- [x] **Step 3: Spec checklist in browser (`pnpm dev`)**
 
 1. Chrome/Firefox: visible edge refraction on window/dock/menu over sharp wallpaper  
 2. Title-only drag; edge/corner resize; no accidental content drag  
@@ -705,7 +705,7 @@ Expected: success
 6. About Tommy coherent with glass OS  
 7. Attribution file present  
 
-- [ ] **Step 4: Final commit if verification fixes were needed**
+- [x] **Step 4: Final commit if verification fixes were needed**
 
 ```bash
 git add -A

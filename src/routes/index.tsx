@@ -213,6 +213,10 @@ export default function Home() {
       const prev = restoreRects()[id];
       if (prev) updateWindowState(id, prev);
       setMaximizedIds((ids) => ids.filter((x) => x !== id));
+      setRestoreRects((r) => {
+        const { [id]: _, ...rest } = r;
+        return rest;
+      });
     } else {
       const cur = windowStates()[id];
       if (cur) setRestoreRects((r) => ({ ...r, [id]: cur }));
@@ -229,6 +233,10 @@ export default function Home() {
       setOpenIds((ids) => ids.filter((x) => x !== id));
       setMinimizedIds((ids) => ids.filter((x) => x !== id));
       setMaximizedIds((ids) => ids.filter((x) => x !== id));
+      setRestoreRects((r) => {
+        const { [id]: _, ...rest } = r;
+        return rest;
+      });
       setWindowStatus((s) => {
         const { [id]: _, ...rest } = s;
         return rest;

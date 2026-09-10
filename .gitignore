@@ -29,3 +29,6 @@ Thumbs.db
 
 # Brainstorm companion sessions
 .superpowers/
+
+# Local git worktrees
+.worktrees/

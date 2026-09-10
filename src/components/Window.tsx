@@ -325,7 +325,7 @@ export default function Window(props: {
   function resizeGrip(
     handle: ResizeHandle,
     className: string,
-    gripClass = "w-2.5 h-2.5",
+    visual?: JSX.Element,
   ) {
     return (
       <div
@@ -334,23 +334,37 @@ export default function Window(props: {
         onMouseDown={(e) => onResizeMouseDown(e, handle)}
         onTouchStart={(e) => onResizeTouchStart(e, handle)}
       >
-        <div
-          class={`pointer-events-none rounded-sm border border-white/40 bg-white/50 opacity-70 shadow-sm transition-opacity group-hover:opacity-100 ${gripClass}`}
-        />
+        {visual}
       </div>
     );
   }
 
+  const cornerVisual = (corner: "nw" | "ne" | "sw" | "se") => {
+    const radius =
+      corner === "nw"
+        ? "rounded-tl-[10px] border-t border-l"
+        : corner === "ne"
+          ? "rounded-tr-[10px] border-t border-r"
+          : corner === "sw"
+            ? "rounded-bl-[10px] border-b border-l"
+            : "rounded-br-[10px] border-b border-r";
+    return (
+      <div
+        class={`pointer-events-none h-3 w-3 border-white/55 opacity-0 transition-opacity duration-150 group-hover:opacity-90 ${radius}`}
+      />
+    );
+  };
+
   return (
     <div
       ref={contentRef}
-      class={`fixed flex flex-col h-full rounded-xl select-none overflow-hidden ${
+      class={`fixed select-none ${
         transitionEnabled()
           ? "transition-transform duration-300 [transition-timing-function:cubic-bezier(0.4,0.8,0.2,1.1)]"
           : ""
       } ${
         props.isActive
-          ? "ring-1 ring-white/30 shadow-2xl shadow-black/40"
+          ? "shadow-2xl shadow-black/45"
           : "shadow-lg shadow-black/30"
       }`}
       style={{
@@ -369,6 +383,93 @@ export default function Window(props: {
       }}
       onMouseDown={handleContainerMouseDown}
     >
+      {/* Liquid-glass border frame — padding ring refracts wallpaper */}
+      <LiquidGlass
+        class="h-full w-full p-[1.5px]"
+        radius={16}
+        tint="transparent"
+        blur={0}
+        depth={12}
+        strength={110}
+        chromaticAberration={3}
+      >
+        <div
+          class="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[14.5px] bg-zinc-950/95"
+          style={{
+            "box-shadow":
+              "inset 0 1px 0 rgba(255,255,255,0.28), inset 0 0 0 0.5px rgba(255,255,255,0.18)",
+          }}
+        >
+          {/* Prismatic edge highlight */}
+          <div
+            class="pointer-events-none absolute inset-0 z-[5] rounded-[14.5px]"
+            style={{
+              padding: "1px",
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,140,160,0.35) 22%, rgba(255,255,255,0.08) 45%, rgba(130,190,255,0.55) 78%, rgba(255,255,255,0.65) 100%)",
+              "-webkit-mask":
+                "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+              "-webkit-mask-composite": "xor",
+              "mask-composite": "exclude",
+              opacity: props.isActive ? "0.95" : "0.55",
+            }}
+          />
+
+          <div
+            class={`relative z-[6] flex shrink-0 items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-2.5 backdrop-blur-[2px] sm:py-2 ${
+              isGrabbing() ? "cursor-grabbing" : "cursor-grab"
+            }`}
+            onMouseDown={onTitleMouseDown}
+            onTouchStart={onTitleTouchStart}
+            onDblClick={() => props.onMaximize?.()}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              props.onContextMenuRequest?.(e.clientX, e.clientY);
+            }}
+          >
+            <div class="flex shrink-0 items-center gap-2">
+              <span
+                class="inline-block h-3.5 w-3.5 cursor-pointer rounded-full border border-[#e33e41] bg-[#ff5f56] transition-transform duration-150 hover:scale-125 sm:h-3 sm:w-3"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.onClose();
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                title="Close"
+              />
+              <span
+                class="inline-block h-3.5 w-3.5 cursor-pointer rounded-full border border-[#e1a116] bg-[#ffbd2e] transition-transform duration-150 hover:scale-125 sm:h-3 sm:w-3"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.onMinimize?.();
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                title="Minimize"
+              />
+              <span
+                class="inline-block h-3.5 w-3.5 cursor-pointer rounded-full border border-[#14ae2c] bg-[#28c840] transition-transform duration-150 hover:scale-125 sm:h-3 sm:w-3"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.onMaximize?.();
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                title={props.maximized ? "Restore" : "Maximize"}
+              />
+            </div>
+            <span
+              class="ml-1 truncate text-sm font-medium text-white/90"
+              style={{ "max-width": "260px" }}
+            >
+              {props.title}
+            </span>
+          </div>
+
+          <div class="relative z-[6] min-h-0 flex-1 overflow-hidden bg-zinc-950 text-zinc-100">
+            {props.children}
+          </div>
+        </div>
+      </LiquidGlass>
+
       {showOverlay() && (
         <div
           style={{
@@ -389,106 +490,46 @@ export default function Window(props: {
         />
       )}
 
-      {/* Glass chrome — title bar only (no displacement over body embeds) */}
-      <LiquidGlass
-        class="shrink-0 w-full"
-        radius={0}
-        tint="black"
-        blur={2}
-        depth={8}
-        strength={80}
-      >
-        <div
-          class={`flex items-center gap-2 px-3 py-2.5 sm:py-2 border-b border-white/10 ${
-            isGrabbing() ? "cursor-grabbing" : "cursor-grab"
-          }`}
-          onMouseDown={onTitleMouseDown}
-          onTouchStart={onTitleTouchStart}
-          onDblClick={() => props.onMaximize?.()}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            props.onContextMenuRequest?.(e.clientX, e.clientY);
-          }}
-        >
-          <div class="flex items-center gap-2 shrink-0">
-            <span
-              class="inline-block w-3.5 h-3.5 sm:w-3 sm:h-3 bg-[#ff5f56] rounded-full border border-[#e33e41] cursor-pointer transition-transform duration-150 hover:scale-125"
-              onClick={(e) => {
-                e.stopPropagation();
-                props.onClose();
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              title="Close"
-            />
-            <span
-              class="inline-block w-3.5 h-3.5 sm:w-3 sm:h-3 bg-[#ffbd2e] rounded-full border border-[#e1a116] cursor-pointer transition-transform duration-150 hover:scale-125"
-              onClick={(e) => {
-                e.stopPropagation();
-                props.onMinimize?.();
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              title="Minimize"
-            />
-            <span
-              class="inline-block w-3.5 h-3.5 sm:w-3 sm:h-3 bg-[#28c840] rounded-full border border-[#14ae2c] cursor-pointer transition-transform duration-150 hover:scale-125"
-              onClick={(e) => {
-                e.stopPropagation();
-                props.onMaximize?.();
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              title={props.maximized ? "Restore" : "Maximize"}
-            />
-          </div>
-          <span
-            class="ml-1 text-sm font-medium text-white/90 truncate"
-            style={{ "max-width": "260px" }}
-          >
-            {props.title}
-          </span>
-        </div>
-      </LiquidGlass>
-
-      {/* Solid body — no liquid-glass displacement over PDF/iframe */}
-      <div class="relative min-h-0 flex-1 overflow-hidden bg-zinc-950 text-zinc-100">
-        {props.children}
-      </div>
-
-      {/* Edge + corner resize grips */}
+      {/* Hit targets — L-curve corners, thin edge bars; hidden until hover */}
       {resizeGrip(
         "nw",
-        "left-0 top-0 w-4 h-4 flex items-start justify-start p-0.5",
+        "left-0 top-0 flex h-5 w-5 items-start justify-start p-1",
+        cornerVisual("nw"),
       )}
       {resizeGrip(
         "ne",
-        "right-0 top-0 w-4 h-4 flex items-start justify-end p-0.5",
+        "right-0 top-0 flex h-5 w-5 items-start justify-end p-1",
+        cornerVisual("ne"),
       )}
       {resizeGrip(
         "sw",
-        "left-0 bottom-0 w-4 h-4 flex items-end justify-start p-0.5",
+        "bottom-0 left-0 flex h-5 w-5 items-end justify-start p-1",
+        cornerVisual("sw"),
       )}
       {resizeGrip(
         "se",
-        "right-0 bottom-0 w-4 h-4 flex items-end justify-end p-0.5",
+        "bottom-0 right-0 flex h-5 w-5 items-end justify-end p-1",
+        cornerVisual("se"),
       )}
       {resizeGrip(
         "n",
-        "left-1/2 top-0 -translate-x-1/2 w-16 h-3 flex items-start justify-center pt-0.5",
-        "w-8 h-1 rounded-full",
+        "left-1/2 top-0 flex h-3 w-16 -translate-x-1/2 items-start justify-center pt-0.5",
+        <div class="pointer-events-none h-0.5 w-8 rounded-full bg-white/50 opacity-0 transition-opacity group-hover:opacity-80" />,
       )}
       {resizeGrip(
         "s",
-        "left-1/2 bottom-0 -translate-x-1/2 w-16 h-3 flex items-end justify-center pb-0.5",
-        "w-8 h-1 rounded-full",
+        "bottom-0 left-1/2 flex h-3 w-16 -translate-x-1/2 items-end justify-center pb-0.5",
+        <div class="pointer-events-none h-0.5 w-8 rounded-full bg-white/50 opacity-0 transition-opacity group-hover:opacity-80" />,
       )}
       {resizeGrip(
         "w",
-        "left-0 top-1/2 -translate-y-1/2 w-3 h-16 flex items-center justify-start pl-0.5",
-        "w-1 h-8 rounded-full",
+        "left-0 top-1/2 flex h-16 w-3 -translate-y-1/2 items-center justify-start pl-0.5",
+        <div class="pointer-events-none h-8 w-0.5 rounded-full bg-white/50 opacity-0 transition-opacity group-hover:opacity-80" />,
       )}
       {resizeGrip(
         "e",
-        "right-0 top-1/2 -translate-y-1/2 w-3 h-16 flex items-center justify-end pr-0.5",
-        "w-1 h-8 rounded-full",
+        "right-0 top-1/2 flex h-16 w-3 -translate-y-1/2 items-center justify-end pr-0.5",
+        <div class="pointer-events-none h-8 w-0.5 rounded-full bg-white/50 opacity-0 transition-opacity group-hover:opacity-80" />,
       )}
     </div>
   );

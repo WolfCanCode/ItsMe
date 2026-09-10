@@ -73,7 +73,7 @@ export default function MyCVViewer(): JSX.Element {
         const pdfjs = await import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-        const loadingTask = pdfjs.getDocument(PDF_URL);
+        const loadingTask = pdfjs.getDocument({ url: PDF_URL });
         const doc = await loadingTask.promise;
         if (cancelled) {
           await doc.destroy();

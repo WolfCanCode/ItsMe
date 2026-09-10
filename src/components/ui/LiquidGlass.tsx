@@ -1,6 +1,6 @@
 import {
   JSX,
-  createSignal,
+  createEffect,
   onCleanup,
   onMount,
   splitProps,
@@ -30,11 +30,11 @@ export default function LiquidGlass(props: Props) {
     "tint",
     "children",
   ]);
+  const [divProps, restAttrs] = splitProps(rest, ["style"]);
   let root!: HTMLDivElement;
   let filterEl!: HTMLDivElement;
-  const [supported] = createSignal(
-    typeof document !== "undefined" && supportsBackdropFilterUrl(),
-  );
+  const supported =
+    typeof document !== "undefined" && supportsBackdropFilterUrl();
 
   function redraw() {
     if (!root || !filterEl) return;
@@ -54,7 +54,7 @@ export default function LiquidGlass(props: Props) {
     const radius = local.radius ?? 16;
     filterEl.style.width = `${width}px`;
     filterEl.style.height = `${height}px`;
-    if (supported()) {
+    if (supported) {
       filterEl.style.backdropFilter = `blur(${blur / 2}px) url('${getDisplacementFilter(
         { height, width, radius, depth, strength, chromaticAberration },
       )}') blur(${blur}px) brightness(1.1) saturate(1.5)`;
@@ -72,6 +72,16 @@ export default function LiquidGlass(props: Props) {
     onCleanup(() => ro.disconnect());
   });
 
+  createEffect(() => {
+    local.depth;
+    local.strength;
+    local.chromaticAberration;
+    local.blur;
+    local.radius;
+    local.tint;
+    redraw();
+  });
+
   const tintBg =
     local.tint === "white"
       ? "rgba(250,250,250,0.5)"
@@ -81,10 +91,15 @@ export default function LiquidGlass(props: Props) {
 
   return (
     <div
-      {...rest}
+      {...restAttrs}
       ref={root}
       class={`liquid-glass relative overflow-hidden ${local.class ?? ""}`}
-      style={{ "border-radius": `${local.radius ?? 16}px` }}
+      style={{
+        ...(typeof divProps.style === "object" && divProps.style !== null
+          ? divProps.style
+          : {}),
+        "border-radius": `${local.radius ?? 16}px`,
+      }}
     >
       <div
         class="pointer-events-none absolute inset-0 z-[1]"

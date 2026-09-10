@@ -1,13 +1,16 @@
-import { createEffect, createSignal, JSX, onMount } from "solid-js";
+import { For, Show, createEffect, createSignal, onMount } from "solid-js";
 import Desktop from "~/components/Desktop";
 import DesktopIcons from "~/components/DesktopIcons";
 import Dock, { DockRef } from "~/components/Dock";
 import Window from "~/components/Window";
+import ContextMenu, { ContextMenuItem } from "~/components/ui/ContextMenu";
 import { projects } from "../projects";
-import CourseTrainerApp from "~/components/apps/CourseTrainerApp";
-import MyCVViewer from "~/components/apps/MyCVViewerApp";
-import InterviewTrainerApp from "~/components/apps/InterviewTrainerApp";
-import AboutTommyWindow from "~/components/apps/AboutTommyWindow";
+import { clampWindow, maximizedRect } from "~/lib/desktopBounds";
+import {
+  WALLPAPERS,
+  WallpaperId,
+  nextWallpaperId,
+} from "~/lib/wallpapers";
 
 interface WindowState {
   x: number;
@@ -22,16 +25,21 @@ type WindowStatus = {
   restoreFrom?: { x: number; y: number };
 };
 
+type CtxState = {
+  kind: "desktop" | "window";
+  windowId?: string;
+  x: number;
+  y: number;
+};
+
 const DEFAULT_STATE: WindowState = { x: 200, y: 100, width: 400, height: 300 };
 const STORAGE_KEY = "wolfcancode-os-state";
 
-// Add global signals for interaction state
 const [interactingWindowId, setInteractingWindowId] = createSignal<
   string | null
 >(null);
 const [isInteracting, setIsInteracting] = createSignal(false);
 
-// Utility to detect mobile
 function isMobile() {
   if (typeof window === "undefined") return false;
   return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -39,9 +47,17 @@ function isMobile() {
   );
 }
 
+function isWallpaperId(id: unknown): id is WallpaperId {
+  return WALLPAPERS.some((w) => w.id === id);
+}
+
 export default function Home() {
   const [openIds, setOpenIds] = createSignal<string[]>([]);
   const [minimizedIds, setMinimizedIds] = createSignal<string[]>([]);
+  const [maximizedIds, setMaximizedIds] = createSignal<string[]>([]);
+  const [restoreRects, setRestoreRects] = createSignal<
+    Record<string, WindowState>
+  >({});
   const [windowStates, setWindowStates] = createSignal<
     Record<string, WindowState>
   >({});
@@ -49,9 +65,11 @@ export default function Home() {
     Record<string, WindowStatus>
   >({});
   const [activeWindow, setActiveWindow] = createSignal<string | null>(null);
+  const [ctx, setCtx] = createSignal<CtxState | null>(null);
+  const [wallpaperId, setWallpaperId] =
+    createSignal<WallpaperId>("liquid-sharp");
   let dockRef: DockRef | undefined;
 
-  // Load from localStorage on mount
   onMount(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -59,17 +77,24 @@ export default function Home() {
         const parsed = JSON.parse(saved);
         if (parsed.openIds) setOpenIds(parsed.openIds);
         if (parsed.minimizedIds) setMinimizedIds(parsed.minimizedIds);
+        if (parsed.maximizedIds) setMaximizedIds(parsed.maximizedIds);
+        if (parsed.restoreRects) setRestoreRects(parsed.restoreRects);
         if (parsed.windowStates) setWindowStates(parsed.windowStates);
+        if (isWallpaperId(parsed.wallpaperId)) {
+          setWallpaperId(parsed.wallpaperId);
+        }
       } catch {}
     }
   });
 
-  // Save to localStorage on change
   createEffect(() => {
     const state = {
       openIds: openIds(),
       minimizedIds: minimizedIds(),
+      maximizedIds: maximizedIds(),
+      restoreRects: restoreRects(),
       windowStates: windowStates(),
+      wallpaperId: wallpaperId(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   });
@@ -79,14 +104,16 @@ export default function Home() {
     if (!project) return;
     let defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
     let defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
+    let defaultX: number;
+    let defaultY: number;
     if (isMobile()) {
       defaultWidth = Math.floor(window.innerWidth * 0.9);
       defaultHeight = Math.floor(window.innerHeight * 0.6);
-      var defaultX = 10;
-      var defaultY = 70;
+      defaultX = 10;
+      defaultY = 70;
     } else {
-      var defaultX = DEFAULT_STATE.x;
-      var defaultY = DEFAULT_STATE.y;
+      defaultX = DEFAULT_STATE.x;
+      defaultY = DEFAULT_STATE.y;
     }
     if (minimizedIds().includes(id)) {
       let restoreFrom: { x: number; y: number } | undefined = undefined;
@@ -105,6 +132,7 @@ export default function Home() {
       }));
       setMinimizedIds((ids) => ids.filter((x) => x !== id));
       bringToFront(id);
+      setActiveWindow(id);
       setTimeout(() => {
         setWindowStatus((status) => {
           const s = { ...status };
@@ -115,34 +143,39 @@ export default function Home() {
     } else if (!openIds().includes(id)) {
       setWindowStatus((status) => ({ ...status, [id]: { status: "open" } }));
       setOpenIds((ids) => [...ids, id]);
+      const initial = clampWindow(
+        defaultX,
+        defaultY,
+        defaultWidth,
+        defaultHeight
+      );
       setWindowStates((states) => ({
         ...states,
-        [id]: states[id] || {
-          x: defaultX,
-          y: defaultY,
-          width: defaultWidth,
-          height: defaultHeight,
-        },
+        [id]: states[id] || initial,
       }));
+      setActiveWindow(id);
     } else {
       setWindowStatus((status) => ({ ...status, [id]: { status: "open" } }));
       bringToFront(id);
+      setActiveWindow(id);
     }
   }
+
   function closeWindow(id: string) {
     setWindowStatus((status) => ({ ...status, [id]: { status: "closing" } }));
     if (activeWindow() === id) {
       setActiveWindow(null);
     }
   }
+
   function bringToFront(id: string) {
     setOpenIds((ids) => {
       const filtered = ids.filter((x) => x !== id);
       return [...filtered, id];
     });
   }
+
   function minimizeWindow(id: string) {
-    // Get dock icon position
     let minimizeTarget: { x: number; y: number } | undefined = undefined;
     if (dockRef) {
       const rect = dockRef.getIconPosition(id);
@@ -158,34 +191,50 @@ export default function Home() {
       ...status,
       [id]: { status: "minimizing", minimizeTarget },
     }));
-    // If the minimized window is active, clear activeWindow
     if (activeWindow() === id) {
       setActiveWindow(null);
     }
   }
+
   function updateWindowState(id: string, state: Partial<WindowState>) {
     setWindowStates((states) => {
       const prev = states[id] || DEFAULT_STATE;
-      // Clamp y so window can't go above 48px (menu bar height)
-      const newY = state.y !== undefined ? Math.max(state.y, 48) : prev.y;
+      const next = { ...prev, ...state };
+      const clamped = clampWindow(next.x, next.y, next.width, next.height);
       return {
         ...states,
-        [id]: { ...prev, ...state, y: newY },
+        [id]: clamped,
       };
     });
   }
+
+  function toggleMaximize(id: string) {
+    if (maximizedIds().includes(id)) {
+      const prev = restoreRects()[id];
+      if (prev) updateWindowState(id, prev);
+      setMaximizedIds((ids) => ids.filter((x) => x !== id));
+    } else {
+      const cur = windowStates()[id];
+      if (cur) setRestoreRects((r) => ({ ...r, [id]: cur }));
+      updateWindowState(id, maximizedRect());
+      setMaximizedIds((ids) => [...ids, id]);
+    }
+    bringToFront(id);
+    setActiveWindow(id);
+  }
+
   function handleWindowAnimationEnd(id: string) {
     const status = windowStatus()[id]?.status;
     if (status === "closing") {
       setOpenIds((ids) => ids.filter((x) => x !== id));
       setMinimizedIds((ids) => ids.filter((x) => x !== id));
+      setMaximizedIds((ids) => ids.filter((x) => x !== id));
       setWindowStatus((s) => {
         const { [id]: _, ...rest } = s;
         return rest;
       });
     } else if (status === "minimizing") {
       setMinimizedIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
-      // Set status to open so it doesn't keep animating
       setWindowStatus((s) => ({
         ...s,
         [id]: { status: "open" },
@@ -193,8 +242,59 @@ export default function Home() {
     }
   }
 
+  function desktopMenuItems(): ContextMenuItem[] {
+    return [
+      { id: "refresh", label: "Refresh" },
+      { id: "about-tommy", label: "About Tommy" },
+      { id: "change-wallpaper", label: "Change wallpaper" },
+    ];
+  }
+
+  function windowMenuItems(windowId: string): ContextMenuItem[] {
+    const maximized = maximizedIds().includes(windowId);
+    return [
+      { id: "close", label: "Close", danger: true },
+      { id: "minimize", label: "Minimize" },
+      { id: "maximize", label: maximized ? "Restore" : "Maximize" },
+      { id: "bring-front", label: "Bring to Front" },
+    ];
+  }
+
+  function handleCtxSelect(itemId: string) {
+    const menu = ctx();
+    if (!menu) return;
+
+    if (menu.kind === "desktop") {
+      if (itemId === "refresh") {
+        // Dismiss only — light refresh of transient UI
+      } else if (itemId === "about-tommy") {
+        openWindow("about-tommy");
+      } else if (itemId === "change-wallpaper") {
+        setWallpaperId((id) => nextWallpaperId(id));
+      }
+      return;
+    }
+
+    const windowId = menu.windowId;
+    if (!windowId) return;
+
+    if (itemId === "close") {
+      closeWindow(windowId);
+    } else if (itemId === "minimize") {
+      minimizeWindow(windowId);
+    } else if (itemId === "maximize") {
+      toggleMaximize(windowId);
+    } else if (itemId === "bring-front") {
+      bringToFront(windowId);
+      setActiveWindow(windowId);
+    }
+  }
+
   return (
-    <Desktop>
+    <Desktop
+      wallpaperId={wallpaperId()}
+      onContextMenu={(x, y) => setCtx({ kind: "desktop", x, y })}
+    >
       <DesktopIcons projects={projects} onOpen={openWindow} />
       <Dock
         projects={projects}
@@ -207,7 +307,6 @@ export default function Home() {
         ref={(ref) => (dockRef = ref)}
         activeId={activeWindow() ?? undefined}
       />
-      {/* Global overlay to block mouse events during drag/resize */}
       {isInteracting() && (
         <div
           style={{
@@ -216,143 +315,76 @@ export default function Home() {
             top: 0,
             width: "100vw",
             height: "100vh",
-            "z-index": 9999,
+            "z-index": "var(--z-interact)",
             "pointer-events": "all",
           }}
         />
       )}
-      <Window
-        id="course-trainer"
-        isOpen={openIds().includes("course-trainer")}
-        title="Course Trainer"
-        x={windowStates()["course-trainer"]?.x ?? 200}
-        y={windowStates()["course-trainer"]?.y ?? 100}
-        width={windowStates()["course-trainer"]?.width ?? 900}
-        height={windowStates()["course-trainer"]?.height ?? 650}
-        zIndex={100 + openIds().indexOf("course-trainer")}
-        isActive={activeWindow() === "course-trainer"}
-        onClose={() => closeWindow("course-trainer")}
-        onMinimize={() => minimizeWindow("course-trainer")}
-        onClick={() => {
-          if (activeWindow() !== "course-trainer") {
-            bringToFront("course-trainer");
-            setActiveWindow("course-trainer");
-          }
+      <For each={openIds()}>
+        {(id) => {
+          const project = () => projects.find((p) => p.id === id);
+          return (
+            <Show when={project()}>
+              {(proj) => {
+                const Comp = proj().component;
+                const state = () => windowStates()[id] || DEFAULT_STATE;
+                return (
+                  <Window
+                    id={id}
+                    isOpen={true}
+                    title={proj().name}
+                    x={state().x}
+                    y={state().y}
+                    width={state().width}
+                    height={state().height}
+                    zIndex={100 + openIds().indexOf(id)}
+                    isActive={activeWindow() === id}
+                    maximized={maximizedIds().includes(id)}
+                    onClose={() => closeWindow(id)}
+                    onMinimize={() => minimizeWindow(id)}
+                    onMaximize={() => toggleMaximize(id)}
+                    onContextMenuRequest={(x, y) =>
+                      setCtx({ kind: "window", windowId: id, x, y })
+                    }
+                    onClick={() => {
+                      if (activeWindow() !== id) {
+                        bringToFront(id);
+                        setActiveWindow(id);
+                      }
+                    }}
+                    onMove={(x, y) => updateWindowState(id, { x, y })}
+                    onResize={(width, height) =>
+                      updateWindowState(id, { width, height })
+                    }
+                    onAnimationEnd={() => handleWindowAnimationEnd(id)}
+                    status={windowStatus()[id]?.status ?? "open"}
+                    minimizeTarget={windowStatus()[id]?.minimizeTarget}
+                    restoreFrom={windowStatus()[id]?.restoreFrom}
+                    minimized={minimizedIds().includes(id)}
+                    isInteracting={interactingWindowId() === id}
+                    setInteractingWindowId={setInteractingWindowId}
+                    setIsInteracting={setIsInteracting}
+                  >
+                    <Comp />
+                  </Window>
+                );
+              }}
+            </Show>
+          );
         }}
-        onMove={(x, y) => updateWindowState("course-trainer", { x, y })}
-        onResize={(width, height) =>
-          updateWindowState("course-trainer", { width, height })
+      </For>
+      <ContextMenu
+        open={ctx() !== null}
+        x={ctx()?.x ?? 0}
+        y={ctx()?.y ?? 0}
+        items={
+          ctx()?.kind === "window" && ctx()?.windowId
+            ? windowMenuItems(ctx()!.windowId!)
+            : desktopMenuItems()
         }
-        onAnimationEnd={() => handleWindowAnimationEnd("course-trainer")}
-        status={windowStatus()["course-trainer"]?.status ?? "open"}
-        minimizeTarget={windowStatus()["course-trainer"]?.minimizeTarget}
-        restoreFrom={windowStatus()["course-trainer"]?.restoreFrom}
-        minimized={minimizedIds().includes("course-trainer")}
-        isInteracting={interactingWindowId() === "course-trainer"}
-        setInteractingWindowId={setInteractingWindowId}
-        setIsInteracting={setIsInteracting}
-      >
-        <CourseTrainerApp />
-      </Window>
-      <Window
-        id="my-cv"
-        isOpen={openIds().includes("my-cv")}
-        title="My CV"
-        x={windowStates()["my-cv"]?.x ?? 200}
-        y={windowStates()["my-cv"]?.y ?? 100}
-        width={windowStates()["my-cv"]?.width ?? 800}
-        height={windowStates()["my-cv"]?.height ?? 1000}
-        zIndex={100 + openIds().indexOf("my-cv")}
-        isActive={activeWindow() === "my-cv"}
-        onClose={() => closeWindow("my-cv")}
-        onMinimize={() => minimizeWindow("my-cv")}
-        onClick={() => {
-          if (activeWindow() !== "my-cv") {
-            bringToFront("my-cv");
-            setActiveWindow("my-cv");
-          }
-        }}
-        onMove={(x, y) => updateWindowState("my-cv", { x, y })}
-        onResize={(width, height) =>
-          updateWindowState("my-cv", { width, height })
-        }
-        onAnimationEnd={() => handleWindowAnimationEnd("my-cv")}
-        status={windowStatus()["my-cv"]?.status ?? "open"}
-        minimizeTarget={windowStatus()["my-cv"]?.minimizeTarget}
-        restoreFrom={windowStatus()["my-cv"]?.restoreFrom}
-        minimized={minimizedIds().includes("my-cv")}
-        isInteracting={interactingWindowId() === "my-cv"}
-        setInteractingWindowId={setInteractingWindowId}
-        setIsInteracting={setIsInteracting}
-      >
-        <MyCVViewer />
-      </Window>
-      <Window
-        id="interview-trainer"
-        isOpen={openIds().includes("interview-trainer")}
-        title="Interview Trainer"
-        x={windowStates()["interview-trainer"]?.x ?? 200}
-        y={windowStates()["interview-trainer"]?.y ?? 100}
-        width={windowStates()["interview-trainer"]?.width ?? 900}
-        height={windowStates()["interview-trainer"]?.height ?? 650}
-        zIndex={100 + openIds().indexOf("interview-trainer")}
-        isActive={activeWindow() === "interview-trainer"}
-        onClose={() => closeWindow("interview-trainer")}
-        onMinimize={() => minimizeWindow("interview-trainer")}
-        onClick={() => {
-          if (activeWindow() !== "interview-trainer") {
-            bringToFront("interview-trainer");
-            setActiveWindow("interview-trainer");
-          }
-        }}
-        onMove={(x, y) => updateWindowState("interview-trainer", { x, y })}
-        onResize={(width, height) =>
-          updateWindowState("interview-trainer", { width, height })
-        }
-        onAnimationEnd={() => handleWindowAnimationEnd("interview-trainer")}
-        status={windowStatus()["interview-trainer"]?.status ?? "open"}
-        minimizeTarget={windowStatus()["interview-trainer"]?.minimizeTarget}
-        restoreFrom={windowStatus()["interview-trainer"]?.restoreFrom}
-        minimized={minimizedIds().includes("interview-trainer")}
-        isInteracting={interactingWindowId() === "interview-trainer"}
-        setInteractingWindowId={setInteractingWindowId}
-        setIsInteracting={setIsInteracting}
-      >
-        <InterviewTrainerApp />
-      </Window>
-      <Window
-        id="about-tommy"
-        isOpen={openIds().includes("about-tommy")}
-        title="About Tommy"
-        x={windowStates()["about-tommy"]?.x ?? 200}
-        y={windowStates()["about-tommy"]?.y ?? 100}
-        width={windowStates()["about-tommy"]?.width ?? 400}
-        height={windowStates()["about-tommy"]?.height ?? 500}
-        zIndex={100 + openIds().indexOf("about-tommy")}
-        isActive={activeWindow() === "about-tommy"}
-        onClose={() => closeWindow("about-tommy")}
-        onMinimize={() => minimizeWindow("about-tommy")}
-        onClick={() => {
-          if (activeWindow() !== "about-tommy") {
-            bringToFront("about-tommy");
-            setActiveWindow("about-tommy");
-          }
-        }}
-        onMove={(x, y) => updateWindowState("about-tommy", { x, y })}
-        onResize={(width, height) =>
-          updateWindowState("about-tommy", { width, height })
-        }
-        onAnimationEnd={() => handleWindowAnimationEnd("about-tommy")}
-        status={windowStatus()["about-tommy"]?.status ?? "open"}
-        minimizeTarget={windowStatus()["about-tommy"]?.minimizeTarget}
-        restoreFrom={windowStatus()["about-tommy"]?.restoreFrom}
-        minimized={minimizedIds().includes("about-tommy")}
-        isInteracting={interactingWindowId() === "about-tommy"}
-        setInteractingWindowId={setInteractingWindowId}
-        setIsInteracting={setIsInteracting}
-      >
-        <AboutTommyWindow />
-      </Window>
+        onSelect={handleCtxSelect}
+        onClose={() => setCtx(null)}
+      />
     </Desktop>
   );
 }

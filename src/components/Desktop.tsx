@@ -1,21 +1,30 @@
-import { JSX } from "solid-js";
+import { JSX, createMemo, createSignal, onMount } from "solid-js";
 import MenuBar from "./MenuBar";
-import { createSignal, onMount } from "solid-js";
+import { WALLPAPERS, WallpaperId } from "~/lib/wallpapers";
 
-export default function Desktop(props: { children?: JSX.Element }) {
-  // Utility to detect mobile
-  function isMobile() {
-    if (typeof window === "undefined") return false;
-    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    );
-  }
+function detectMobile() {
+  if (typeof window === "undefined") return false;
+  return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
 
-  const [bg, setBg] = createSignal("/wallpapers/mywall.png");
-  onMount(() => {
-    if (isMobile()) {
-      setBg("/wallpapers/mywall-mobile.jpg");
-    }
+export default function Desktop(props: {
+  children?: JSX.Element;
+  wallpaperId: WallpaperId;
+  onContextMenu?: (x: number, y: number) => void;
+}) {
+  const [mobile, setMobile] = createSignal(false);
+  onMount(() => setMobile(detectMobile()));
+
+  const wallpaper = createMemo(
+    () =>
+      WALLPAPERS.find((w) => w.id === props.wallpaperId) ?? WALLPAPERS[0]!
+  );
+
+  const bg = createMemo(() => {
+    const w = wallpaper();
+    return mobile() ? w.mobileSrc : w.src;
   });
 
   return (
@@ -26,7 +35,10 @@ export default function Desktop(props: { children?: JSX.Element }) {
         "background-size": "cover",
         "background-position": "center",
       }}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        props.onContextMenu?.(e.clientX, e.clientY);
+      }}
     >
       <MenuBar />
       {props.children}

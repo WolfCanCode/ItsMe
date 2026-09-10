@@ -222,6 +222,7 @@ export default function Home() {
         />
       )}
       <Window
+        id="course-trainer"
         isOpen={openIds().includes("course-trainer")}
         title="Course Trainer"
         x={windowStates()["course-trainer"]?.x ?? 200}
@@ -254,6 +255,7 @@ export default function Home() {
         <CourseTrainerApp />
       </Window>
       <Window
+        id="my-cv"
         isOpen={openIds().includes("my-cv")}
         title="My CV"
         x={windowStates()["my-cv"]?.x ?? 200}
@@ -286,6 +288,7 @@ export default function Home() {
         <MyCVViewer />
       </Window>
       <Window
+        id="interview-trainer"
         isOpen={openIds().includes("interview-trainer")}
         title="Interview Trainer"
         x={windowStates()["interview-trainer"]?.x ?? 200}
@@ -318,6 +321,7 @@ export default function Home() {
         <InterviewTrainerApp />
       </Window>
       <Window
+        id="about-tommy"
         isOpen={openIds().includes("about-tommy")}
         title="About Tommy"
         x={windowStates()["about-tommy"]?.x ?? 200}

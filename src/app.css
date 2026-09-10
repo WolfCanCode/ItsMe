@@ -8,15 +8,15 @@
   --font-display: "Syne", sans-serif;
   --font-body: "DM Sans", sans-serif;
   --menu-height: 40px;
-  --dock-clearance: 96px;
+  --dock-clearance: 88px;
   --glass-depth: 10;
   --glass-strength: 100;
   --glass-cab: 2;
   --accent: #28c840;
   --z-menubar: 1000;
-  --z-dock: 900;
-  --z-context: 1100;
-  --z-interact: 9999;
+  --z-dock: 1200;
+  --z-context: 1300;
+  --z-interact: 10000;
 }
 
 @media (prefers-color-scheme: dark) {

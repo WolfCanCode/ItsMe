@@ -6,7 +6,11 @@ import {
   onMount,
   type JSX,
 } from "solid-js";
-import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
+import type {
+  PDFDocumentLoadingTask,
+  PDFDocumentProxy,
+  RenderTask,
+} from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 const PDF_URL = "/pdf/myCV.pdf";
@@ -24,11 +28,20 @@ export default function MyCVViewer(): JSX.Element {
   let containerRef: HTMLDivElement | undefined;
   let pdfDoc: PDFDocumentProxy | null = null;
   let renderTask: RenderTask | null = null;
+  let loadingTask: PDFDocumentLoadingTask | null = null;
 
   const cancelRender = () => {
     if (renderTask) {
       renderTask.cancel();
       renderTask = null;
+    }
+  };
+
+  /** pdf.js v5+/v6: PDFDocumentProxy has cleanup(), not destroy(). */
+  const releaseDoc = (doc: PDFDocumentProxy | null) => {
+    if (!doc) return;
+    if (typeof doc.cleanup === "function") {
+      void doc.cleanup();
     }
   };
 
@@ -73,10 +86,11 @@ export default function MyCVViewer(): JSX.Element {
         const pdfjs = await import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-        const loadingTask = pdfjs.getDocument({ url: PDF_URL });
+        loadingTask = pdfjs.getDocument({ url: PDF_URL });
         const doc = await loadingTask.promise;
+        loadingTask = null;
         if (cancelled) {
-          await doc.destroy();
+          releaseDoc(doc);
           return;
         }
 
@@ -105,7 +119,9 @@ export default function MyCVViewer(): JSX.Element {
       if (resizeTimer !== undefined) window.clearTimeout(resizeTimer);
       ro.disconnect();
       cancelRender();
-      void pdfDoc?.destroy();
+      loadingTask?.destroy();
+      loadingTask = null;
+      releaseDoc(pdfDoc);
       pdfDoc = null;
     });
   });

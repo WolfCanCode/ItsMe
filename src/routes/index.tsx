@@ -1,6 +1,5 @@
 import { For, Show, createEffect, createSignal, onMount } from "solid-js";
 import Desktop from "~/components/Desktop";
-import DesktopIcons from "~/components/DesktopIcons";
 import Dock, { DockRef } from "~/components/Dock";
 import Window from "~/components/Window";
 import ContextMenu, { ContextMenuItem } from "~/components/ui/ContextMenu";
@@ -139,7 +138,7 @@ export default function Home() {
           if (s[id]) delete s[id].restoreFrom;
           return s;
         });
-      }, 10);
+      }, 560);
     } else if (!openIds().includes(id)) {
       setWindowStatus((status) => ({ ...status, [id]: { status: "open" } }));
       setOpenIds((ids) => [...ids, id]);
@@ -303,7 +302,6 @@ export default function Home() {
       wallpaperId={wallpaperId()}
       onContextMenu={(x, y) => setCtx({ kind: "desktop", x, y })}
     >
-      <DesktopIcons projects={projects} onOpen={openWindow} />
       <Dock
         projects={projects}
         onOpen={(id) => {
@@ -317,13 +315,15 @@ export default function Home() {
       />
       {isInteracting() && (
         <div
+          aria-hidden="true"
           style={{
             position: "fixed",
             left: 0,
             top: 0,
             width: "100vw",
             height: "100vh",
-            "z-index": "var(--z-interact)",
+            // Below the active dragged window (10050+), above idle windows (~100)
+            "z-index": 10000,
             "pointer-events": "all",
           }}
         />
@@ -370,6 +370,7 @@ export default function Home() {
                     restoreFrom={windowStatus()[id]?.restoreFrom}
                     minimized={minimizedIds().includes(id)}
                     isInteracting={interactingWindowId() === id}
+                    desktopBusy={isInteracting()}
                     setInteractingWindowId={setInteractingWindowId}
                     setIsInteracting={setIsInteracting}
                   >

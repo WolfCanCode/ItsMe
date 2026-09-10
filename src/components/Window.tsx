@@ -6,7 +6,6 @@ import {
   onCleanup,
   createSignal,
 } from "solid-js";
-import LiquidGlass from "~/components/ui/LiquidGlass";
 import { clampWindow, MIN_W, MIN_H } from "~/lib/desktopBounds";
 
 type WindowStatus = "open" | "minimizing" | "closing";
@@ -23,25 +22,31 @@ type ResizeHandle =
 
 const WINDOW_RADIUS = 16;
 
-/** Lightweight CSS glass rim used while dragging/resizing (no SVG displacement). */
-function StaticGlassFrame(props: {
+/** Cheap frosted glass — hairline rim; shadow follows radius (no square outer shadow). */
+function FrostedFrame(props: {
   active?: boolean;
+  lite?: boolean;
   children: JSX.Element;
 }) {
   return (
     <div
-      class="h-full w-full rounded-2xl p-[1.5px]"
+      class="relative flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl"
       style={{
-        background:
-          "linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,140,160,0.25) 30%, rgba(255,255,255,0.08) 50%, rgba(130,190,255,0.4) 100%)",
+        background: props.lite
+          ? "rgba(24,24,27,0.94)"
+          : "rgba(24,24,27,0.78)",
+        "backdrop-filter": props.lite ? "none" : "blur(18px) saturate(1.35)",
+        "-webkit-backdrop-filter": props.lite
+          ? "none"
+          : "blur(18px) saturate(1.35)",
+        border: "0.5px solid rgba(255,255,255,0.16)",
+        // Soft elevation that tracks border-radius (avoid square silhouette)
         "box-shadow": props.active
-          ? "0 20px 50px rgba(0,0,0,0.4)"
-          : "0 12px 32px rgba(0,0,0,0.3)",
+          ? "0 8px 28px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.22), inset 0 0.5px 0 rgba(255,255,255,0.12)"
+          : "0 6px 20px rgba(0,0,0,0.28), 0 1px 4px rgba(0,0,0,0.18), inset 0 0.5px 0 rgba(255,255,255,0.08)",
       }}
     >
-      <div class="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[14.5px] bg-zinc-950/95">
-        {props.children}
-      </div>
+      {props.children}
     </div>
   );
 }
@@ -106,6 +111,8 @@ export default function Window(props: {
   minimized?: boolean;
   isOpen?: boolean;
   isInteracting?: boolean;
+  /** True while any window is being dragged/resized — disable heavy glass everywhere. */
+  desktopBusy?: boolean;
   interactingWindowId?: string | null;
   setInteractingWindowId?: (id: string | null) => void;
   setIsInteracting?: (v: boolean) => void;
@@ -122,14 +129,22 @@ export default function Window(props: {
   let bodyRef: HTMLDivElement | undefined;
 
   const [transform, setTransform] = createSignal("scale(1)");
+  const [transformOrigin, setTransformOrigin] = createSignal("50% 50%");
+  const [winOpacity, setWinOpacity] = createSignal(1);
   const [transitionEnabled, setTransitionEnabled] = createSignal(true);
   const [showOverlay, setShowOverlay] = createSignal(false);
   const [isGrabbing, setIsGrabbing] = createSignal(false);
-  /** Skip heavy LiquidGlass displacement while dragging/resizing/animating. */
+  /** Skip frosted blur while dragging/resizing/animating. */
   const [liteChrome, setLiteChrome] = createSignal(false);
-  /** Replace live app content with a static bitmap during animations. */
-  const [snapshotUrl, setSnapshotUrl] = createSignal<string | null>(null);
   const [freezeLive, setFreezeLive] = createSignal(false);
+  /** Disable left/top/width/height transitions while dragging/resizing. */
+  const [lockGeomTransition, setLockGeomTransition] = createSignal(false);
+  /** Allow maximize morph only after mount (avoids open flash). */
+  const [geomReady, setGeomReady] = createSignal(false);
+
+  const MAC_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+  const MINIMIZE_MS = 520;
+  const MAXIMIZE_MS = 460;
 
   function interactionKey() {
     return props.id ?? props.title;
@@ -137,16 +152,22 @@ export default function Window(props: {
 
   function beginInteraction() {
     setLiteChrome(true);
+    setLockGeomTransition(true);
     props.setInteractingWindowId?.(interactionKey());
     props.setIsInteracting?.(true);
-    document.body.style.overflow = "hidden";
   }
 
   function endInteraction() {
     setLiteChrome(false);
+    setLockGeomTransition(false);
     props.setInteractingWindowId?.(null);
     props.setIsInteracting?.(false);
-    document.body.style.overflow = "";
+  }
+
+  function dockTransformOrigin(target: { x: number; y: number }) {
+    const ox = ((target.x - props.x) / Math.max(props.width, 1)) * 100;
+    const oy = ((target.y - props.y) / Math.max(props.height, 1)) * 100;
+    return `${Math.min(110, Math.max(-10, ox))}% ${Math.min(110, Math.max(-10, oy))}%`;
   }
 
   function writeDomGeom(x: number, y: number, width: number, height: number) {
@@ -174,45 +195,21 @@ export default function Window(props: {
     writeDomGeom(c.x, c.y, c.width, c.height);
   }
 
-  async function captureSnapshot() {
-    if (!contentRef) return null;
-    try {
-      const { toJpeg } = await import("html-to-image");
-      // Lower pixelRatio keeps minimize snappy with 4 windows open
-      return await toJpeg(contentRef, {
-        quality: 0.72,
-        pixelRatio: 0.6,
-        cacheBust: false,
-        skipFonts: true,
-        filter: (node) => {
-          // Skip cross-origin iframes (they taint / stall capture)
-          if (node instanceof HTMLIFrameElement) return false;
-          return true;
-        },
-      });
-    } catch {
-      return null;
-    }
-  }
-
-  async function freezeForAnimation() {
+  /** Freeze live content during minimize/close animations (no bitmap capture). */
+  function freezeForAnimation() {
     setLiteChrome(true);
-    if (!snapshotUrl()) {
-      const url = await captureSnapshot();
-      if (url) setSnapshotUrl(url);
-    }
     setFreezeLive(true);
   }
 
-  async function handleMinimize(e: MouseEvent) {
+  function handleMinimize(e: MouseEvent) {
     e.stopPropagation();
-    await freezeForAnimation();
+    freezeForAnimation();
     props.onMinimize?.();
   }
 
-  async function handleClose(e: MouseEvent) {
+  function handleClose(e: MouseEvent) {
     e.stopPropagation();
-    await freezeForAnimation();
+    freezeForAnimation();
     props.onClose();
   }
 
@@ -233,7 +230,7 @@ export default function Window(props: {
     writeDomGeom(x, y, w, h);
   });
 
-  // After restore from dock, remount live content once animation settles
+  // After restore from dock, keep frozen until suck-in finishes
   createEffect(() => {
     if (props.restoreFrom) {
       setFreezeLive(true);
@@ -243,78 +240,93 @@ export default function Window(props: {
 
   createEffect(() => {
     if (props.status === "open" && !props.minimized && !props.restoreFrom) {
-      // Delay remount so restore scale-in can finish on the snapshot
       const t = window.setTimeout(() => {
         setFreezeLive(false);
         setLiteChrome(false);
-      }, 320);
+        setTransformOrigin("50% 50%");
+        setWinOpacity(1);
+        setTransform("scale(1)");
+      }, MINIMIZE_MS);
       onCleanup(() => clearTimeout(t));
     }
   });
 
+  let animEndSent = false;
+  function emitAnimationEnd() {
+    if (animEndSent) return;
+    if (props.status !== "closing" && props.status !== "minimizing") return;
+    animEndSent = true;
+    props.onAnimationEnd?.();
+  }
+
   onMount(() => {
-    if (!contentRef) return;
-    let timeout: number | undefined;
+    const readyT = window.setTimeout(() => setGeomReady(true), 80);
+    if (!contentRef) {
+      onCleanup(() => clearTimeout(readyT));
+      return;
+    }
     const handler = (e: TransitionEvent) => {
-      if (
-        e.propertyName === "transform" &&
-        (props.status === "closing" || props.status === "minimizing")
-      ) {
-        if (timeout) clearTimeout(timeout);
-        props.onAnimationEnd?.();
+      if (e.propertyName === "transform" || e.propertyName === "opacity") {
+        emitAnimationEnd();
       }
     };
     contentRef.addEventListener("transitionend", handler);
-    if (props.status === "closing" || props.status === "minimizing") {
-      timeout = window.setTimeout(() => {
-        props.onAnimationEnd?.();
-      }, 300);
-    }
     onCleanup(() => {
+      clearTimeout(readyT);
       contentRef?.removeEventListener("transitionend", handler);
-      if (timeout) clearTimeout(timeout);
     });
   });
 
+  // Restore from dock — reverse macOS suck
   onMount(() => {
     if (props.restoreFrom) {
       setTransitionEnabled(false);
-      const winCenterX = props.x + props.width / 2;
-      const winCenterY = props.y + props.height / 2;
-      const dx = props.restoreFrom.x - winCenterX;
-      const dy = props.restoreFrom.y - winCenterY;
-      setTransform(`translate(${dx}px, ${dy}px) scale(0.1)`);
+      setTransformOrigin(dockTransformOrigin(props.restoreFrom));
+      setTransform("scale(0.04, 0.14) translateX(10%)");
+      setWinOpacity(0);
       requestAnimationFrame(() => {
-        if (contentRef) contentRef.offsetWidth;
-        setTransitionEnabled(true);
-        setTransform("scale(1)");
+        requestAnimationFrame(() => {
+          setTransitionEnabled(true);
+          setTransform("scale(1) translateX(0)");
+          setWinOpacity(1);
+        });
       });
     }
   });
 
   createEffect(() => {
     if (props.status === "minimizing" && props.minimizeTarget) {
+      animEndSent = false;
       setLiteChrome(true);
       setFreezeLive(true);
-      setTransform("scale(1)");
       setTransitionEnabled(true);
+      setTransformOrigin(dockTransformOrigin(props.minimizeTarget));
+      setTransform("scale(1)");
+      setWinOpacity(1);
       requestAnimationFrame(() => {
-        const winCenterX = props.x + props.width / 2;
-        const winCenterY = props.y + props.height / 2;
-        const dx = props.minimizeTarget!.x - winCenterX;
-        const dy = props.minimizeTarget!.y - winCenterY - 20;
-        setTransform(`translate(${dx}px, ${dy}px) scale(0.01)`);
+        // Suck toward right dock: squash + fade (macOS-like)
+        setTransform("scale(0.035, 0.12) translateX(14%)");
+        setWinOpacity(0);
       });
     } else if (props.status === "closing") {
+      animEndSent = false;
       setLiteChrome(true);
       setFreezeLive(true);
       setTransitionEnabled(true);
+      setTransformOrigin("50% 50%");
       if (contentRef) contentRef.offsetWidth;
-      setTransform("scale(0.01)");
-    } else if (!props.restoreFrom && props.status === "open") {
-      setTransitionEnabled(true);
-      setTransform("scale(1.01)");
-      setTimeout(() => setTransform("scale(1)"), 100);
+      setTransform("scale(0.92)");
+      setWinOpacity(0);
+    }
+  });
+
+  // Fallback if transitionend is missed
+  createEffect(() => {
+    if (props.status === "minimizing" || props.status === "closing") {
+      const t = window.setTimeout(() => {
+        emitAnimationEnd();
+      }, MINIMIZE_MS + 80);
+      onCleanup(() => clearTimeout(t));
     }
   });
 
@@ -539,7 +551,7 @@ export default function Window(props: {
   function resizeGrip(handle: ResizeHandle, className: string, visual?: JSX.Element) {
     return (
       <div
-        class={`absolute z-[100] group ${className}`}
+        class={`absolute z-30 group ${className}`}
         style={{ cursor: handleCursor[handle] }}
         onMouseDown={(e) => onResizeMouseDown(e, handle)}
         onTouchStart={(e) => onResizeTouchStart(e, handle)}
@@ -552,23 +564,12 @@ export default function Window(props: {
   const chromeInner = (
     <>
       <div
-        class="pointer-events-none absolute inset-0 z-[5] rounded-[14.5px]"
-        style={{
-          padding: "1px",
-          background:
-            "linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,140,160,0.35) 22%, rgba(255,255,255,0.08) 45%, rgba(130,190,255,0.55) 78%, rgba(255,255,255,0.65) 100%)",
-          "-webkit-mask":
-            "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-          "-webkit-mask-composite": "xor",
-          "mask-composite": "exclude",
-          opacity: props.isActive ? "0.95" : "0.55",
-        }}
-      />
-
-      <div
-        class={`relative z-[110] flex shrink-0 items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-2.5 backdrop-blur-[2px] sm:py-2 ${
+        class={`relative z-[110] flex shrink-0 items-center gap-2 border-b border-white/10 px-3 py-2.5 sm:py-2 ${
           isGrabbing() ? "cursor-grabbing" : "cursor-grab"
         }`}
+        style={{
+          background: "rgba(255,255,255,0.06)",
+        }}
         onMouseDown={onTitleMouseDown}
         onTouchStart={onTitleTouchStart}
         onDblClick={() => props.onMaximize?.()}
@@ -615,23 +616,9 @@ export default function Window(props: {
         <Show
           when={!hideLiveContent()}
           fallback={
-            <Show
-              when={snapshotUrl()}
-              fallback={
-                <div class="flex h-full items-center justify-center bg-zinc-900 text-sm text-white/40">
-                  {props.title}
-                </div>
-              }
-            >
-              {(url) => (
-                <img
-                  src={url()}
-                  alt=""
-                  class="h-full w-full object-cover object-top"
-                  draggable={false}
-                />
-              )}
-            </Show>
+            <div class="flex h-full items-center justify-center bg-zinc-900/90 text-sm text-white/40">
+              {props.title}
+            </div>
           }
         >
           {props.children}
@@ -643,23 +630,29 @@ export default function Window(props: {
   return (
     <div
       ref={contentRef}
-      class={`fixed select-none ${
-        transitionEnabled()
-          ? "transition-transform duration-300 [transition-timing-function:cubic-bezier(0.4,0.8,0.2,1.1)]"
-          : ""
-      } ${
-        props.isActive
-          ? "shadow-2xl shadow-black/45"
-          : "shadow-lg shadow-black/30"
-      }`}
+      class="fixed select-none rounded-2xl"
       style={{
         left: `${props.x}px`,
         top: `${props.y}px`,
         width: `${props.width}px`,
         height: `${props.height}px`,
-        "z-index": props.zIndex ?? 50,
+        "z-index":
+          props.isInteracting
+            ? Math.max(props.zIndex ?? 50, 10050)
+            : (props.zIndex ?? 50),
         transform: transform(),
-        "will-change": dragging || resizing ? "left, top, width, height" : "transform",
+        "transform-origin": transformOrigin(),
+        opacity: winOpacity(),
+        // Maximize morphs geometry; minimize sucks via transform/opacity
+        transition: !transitionEnabled() || lockGeomTransition()
+          ? "none"
+          : geomReady()
+            ? `left ${MAXIMIZE_MS}ms ${MAC_EASE}, top ${MAXIMIZE_MS}ms ${MAC_EASE}, width ${MAXIMIZE_MS}ms ${MAC_EASE}, height ${MAXIMIZE_MS}ms ${MAC_EASE}, transform ${MINIMIZE_MS}ms ${MAC_EASE}, opacity ${MINIMIZE_MS}ms ${MAC_EASE}`
+            : `transform ${MINIMIZE_MS}ms ${MAC_EASE}, opacity ${MINIMIZE_MS}ms ${MAC_EASE}`,
+        "will-change":
+          dragging || resizing
+            ? "left, top, width, height"
+            : "transform, opacity, left, top, width, height",
         display:
           props.isOpen === false
             ? "none"
@@ -669,32 +662,12 @@ export default function Window(props: {
       }}
       onMouseDown={handleContainerMouseDown}
     >
-      <Show
-        when={!liteChrome()}
-        fallback={
-          <StaticGlassFrame active={props.isActive}>{chromeInner}</StaticGlassFrame>
-        }
+      <FrostedFrame
+        active={props.isActive}
+        lite={liteChrome() || !!props.desktopBusy}
       >
-        <LiquidGlass
-          class="h-full w-full p-[1.5px]"
-          radius={WINDOW_RADIUS}
-          tint="transparent"
-          blur={0}
-          depth={12}
-          strength={110}
-          chromaticAberration={3}
-        >
-          <div
-            class="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[14.5px] bg-zinc-950/95"
-            style={{
-              "box-shadow":
-                "inset 0 1px 0 rgba(255,255,255,0.28), inset 0 0 0 0.5px rgba(255,255,255,0.18)",
-            }}
-          >
-            {chromeInner}
-          </div>
-        </LiquidGlass>
-      </Show>
+        {chromeInner}
+      </FrostedFrame>
 
       {showOverlay() && (
         <div
@@ -705,7 +678,7 @@ export default function Window(props: {
             width: "100%",
             height: "100%",
             background: "transparent",
-            "z-index": 9999,
+            "z-index": 40,
             "pointer-events": "all",
             cursor: resizing
               ? "nwse-resize"
@@ -716,45 +689,45 @@ export default function Window(props: {
         />
       )}
 
-      {/* Corner hit targets: outer tip only — must not cover traffic lights */}
+      {/* Outer-rim grips only — NW/NE sit mostly outside so they miss traffic lights */}
       {resizeGrip(
         "nw",
-        "left-0 top-0 z-[90] h-3 w-3",
+        "-left-1 -top-1 h-2.5 w-2.5",
         <CornerCurve corner="nw" />,
       )}
       {resizeGrip(
         "ne",
-        "right-0 top-0 z-[90] h-3 w-3",
+        "-right-1 -top-1 h-2.5 w-2.5",
         <CornerCurve corner="ne" />,
       )}
       {resizeGrip(
         "sw",
-        "bottom-0 left-0 z-[90] h-3.5 w-3.5",
+        "bottom-0 left-0 h-3.5 w-3.5",
         <CornerCurve corner="sw" />,
       )}
       {resizeGrip(
         "se",
-        "bottom-0 right-0 z-[90] h-3.5 w-3.5",
+        "bottom-0 right-0 h-3.5 w-3.5",
         <CornerCurve corner="se" />,
       )}
       {resizeGrip(
         "n",
-        "left-1/2 top-0 z-[90] flex h-2 w-20 -translate-x-1/2 items-start justify-center",
+        "left-1/2 top-0 flex h-2 w-20 -translate-x-1/2 items-start justify-center",
         <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
       {resizeGrip(
         "s",
-        "bottom-0 left-1/2 z-[90] flex h-3 w-20 -translate-x-1/2 items-end justify-center pb-[1px]",
+        "bottom-0 left-1/2 flex h-3 w-20 -translate-x-1/2 items-end justify-center pb-[1px]",
         <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
       {resizeGrip(
         "w",
-        "left-0 top-1/2 z-[90] flex h-20 w-3 -translate-y-1/2 items-center justify-start pl-[1px]",
+        "left-0 top-[40%] flex h-16 w-2.5 items-center justify-start pl-[1px]",
         <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
       {resizeGrip(
         "e",
-        "right-0 top-1/2 z-[90] flex h-20 w-3 -translate-y-1/2 items-center justify-end pr-[1px]",
+        "right-0 top-1/2 flex h-20 w-3 -translate-y-1/2 items-center justify-end pr-[1px]",
         <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
     </div>

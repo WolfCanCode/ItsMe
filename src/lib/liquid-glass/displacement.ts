@@ -77,6 +77,13 @@ export const getDisplacementMap = ({
     </g>
 </svg>`);
 
+/** Quantize size so ResizeObserver churn hits a small cache instead of rebuilding SVGs. */
+export function quantizeGlassSize(n: number, step = 64): number {
+  return Math.max(step, Math.ceil(n / step) * step);
+}
+
+const filterCache = new Map<string, string>();
+
 export const getDisplacementFilter = ({
   height,
   width,
@@ -84,15 +91,22 @@ export const getDisplacementFilter = ({
   depth,
   strength = 100,
   chromaticAberration = 0,
-}: DisplacementOptions) =>
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(`<svg height="${height}" width="${width}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+}: DisplacementOptions) => {
+  const w = quantizeGlassSize(width);
+  const h = quantizeGlassSize(height);
+  const key = `${w}x${h}:${radius}:${depth}:${strength}:${chromaticAberration}`;
+  const cached = filterCache.get(key);
+  if (cached) return cached;
+
+  const url =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(`<svg height="${h}" width="${w}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <filter id="displace" color-interpolation-filters="sRGB">
-            <feImage x="0" y="0" height="${height}" width="${width}" href="${getDisplacementMap(
+            <feImage x="0" y="0" height="${h}" width="${w}" href="${getDisplacementMap(
               {
-                height,
-                width,
+                height: h,
+                width: w,
                 radius,
                 depth,
               },
@@ -148,4 +162,10 @@ export const getDisplacementFilter = ({
         </filter>
     </defs>
 </svg>`) +
-  "#displace";
+    "#displace";
+
+  // Bound memory if many window sizes are used
+  if (filterCache.size > 48) filterCache.clear();
+  filterCache.set(key, url);
+  return url;
+};

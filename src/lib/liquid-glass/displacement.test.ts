@@ -30,5 +30,15 @@ describe("liquid-glass displacement", () => {
     expect(filter.startsWith("data:image/svg+xml;utf8,")).toBe(true);
     expect(filter.endsWith("#displace")).toBe(true);
     expect(decodeURIComponent(filter)).toContain("feDisplacementMap");
+    // Cache hit for identical params
+    const again = getDisplacementFilter({
+      height: 120,
+      width: 200,
+      radius: 16,
+      depth: 10,
+      strength: 100,
+      chromaticAberration: 2,
+    });
+    expect(again).toBe(filter);
   });
 });

@@ -72,7 +72,7 @@ export const projects: Project[] = [
     description: "About Tommy Le (wolfcancode) and social links.",
     link: "#about-tommy",
     component: AboutTommyWindow,
-    defaultWidth: 400,
-    defaultHeight: 500,
+    defaultWidth: 720,
+    defaultHeight: 560,
   },
 ];

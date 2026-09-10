@@ -566,7 +566,7 @@ export default function Window(props: {
       />
 
       <div
-        class={`relative z-[6] flex shrink-0 items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-2.5 backdrop-blur-[2px] sm:py-2 ${
+        class={`relative z-[110] flex shrink-0 items-center gap-2 border-b border-white/10 bg-white/[0.06] px-3 py-2.5 backdrop-blur-[2px] sm:py-2 ${
           isGrabbing() ? "cursor-grabbing" : "cursor-grab"
         }`}
         onMouseDown={onTitleMouseDown}
@@ -577,7 +577,7 @@ export default function Window(props: {
           props.onContextMenuRequest?.(e.clientX, e.clientY);
         }}
       >
-        <div class="flex shrink-0 items-center gap-2">
+        <div class="relative z-[111] flex shrink-0 items-center gap-2">
           <span
             class="inline-block h-3.5 w-3.5 cursor-pointer rounded-full border border-[#e33e41] bg-[#ff5f56] transition-transform duration-150 hover:scale-125 sm:h-3 sm:w-3"
             onClick={handleClose}
@@ -716,45 +716,45 @@ export default function Window(props: {
         />
       )}
 
-      {/* Corner curves follow glass border radius; edge bars on hover */}
+      {/* Corner hit targets: outer tip only — must not cover traffic lights */}
       {resizeGrip(
         "nw",
-        "left-0 top-0 h-6 w-6",
+        "left-0 top-0 z-[90] h-3 w-3",
         <CornerCurve corner="nw" />,
       )}
       {resizeGrip(
         "ne",
-        "right-0 top-0 h-6 w-6",
+        "right-0 top-0 z-[90] h-3 w-3",
         <CornerCurve corner="ne" />,
       )}
       {resizeGrip(
         "sw",
-        "bottom-0 left-0 h-6 w-6",
+        "bottom-0 left-0 z-[90] h-3.5 w-3.5",
         <CornerCurve corner="sw" />,
       )}
       {resizeGrip(
         "se",
-        "bottom-0 right-0 h-6 w-6",
+        "bottom-0 right-0 z-[90] h-3.5 w-3.5",
         <CornerCurve corner="se" />,
       )}
       {resizeGrip(
         "n",
-        "left-1/2 top-0 flex h-3 w-20 -translate-x-1/2 items-start justify-center pt-[1px]",
+        "left-1/2 top-0 z-[90] flex h-2 w-20 -translate-x-1/2 items-start justify-center",
         <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
       {resizeGrip(
         "s",
-        "bottom-0 left-1/2 flex h-3 w-20 -translate-x-1/2 items-end justify-center pb-[1px]",
+        "bottom-0 left-1/2 z-[90] flex h-3 w-20 -translate-x-1/2 items-end justify-center pb-[1px]",
         <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
       {resizeGrip(
         "w",
-        "left-0 top-1/2 flex h-20 w-3 -translate-y-1/2 items-center justify-start pl-[1px]",
+        "left-0 top-1/2 z-[90] flex h-20 w-3 -translate-y-1/2 items-center justify-start pl-[1px]",
         <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
       {resizeGrip(
         "e",
-        "right-0 top-1/2 flex h-20 w-3 -translate-y-1/2 items-center justify-end pr-[1px]",
+        "right-0 top-1/2 z-[90] flex h-20 w-3 -translate-y-1/2 items-center justify-end pr-[1px]",
         <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
       )}
     </div>

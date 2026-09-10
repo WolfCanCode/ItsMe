@@ -1,10 +1,22 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
   --background-rgb: 214, 219, 220;
   --foreground-rgb: 0, 0, 0;
 
-  
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --menu-height: 40px;
+  --dock-clearance: 96px;
+  --glass-depth: 10;
+  --glass-strength: 100;
+  --glass-cab: 2;
+  --accent: #28c840;
+  --z-menubar: 1000;
+  --z-dock: 900;
+  --z-context: 1100;
+  --z-interact: 9999;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +34,7 @@ html, body {
 body {
   background: rgb(var(--background-rgb));
   color: rgb(var(--foreground-rgb));
+  font-family: var(--font-body);
 }
 
 /* Prevent all text selection by default */
@@ -32,4 +45,9 @@ body, #app, .no-select, * {
 /* Allow selection for form fields and editable content */
 input, textarea, [contenteditable], input *, textarea * {
   user-select: text;
+}
+
+@keyframes ctx {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }

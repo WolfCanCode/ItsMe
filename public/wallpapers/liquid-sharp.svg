@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#ffffff" stroke-width="0.75" opacity="0.12"/>
+    </pattern>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a12"/>
+      <stop offset="50%" stop-color="#12101f"/>
+      <stop offset="100%" stop-color="#0d1528"/>
+    </linearGradient>
+    <linearGradient id="stripe-a" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff2d6a"/>
+      <stop offset="100%" stop-color="#ff6b35"/>
+    </linearGradient>
+    <linearGradient id="stripe-b" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="stripe-c" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffe600"/>
+      <stop offset="100%" stop-color="#28c840"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+
+  <!-- Bold diagonal bands -->
+  <polygon points="0,0 920,0 340,1080 0,1080" fill="url(#stripe-a)"/>
+  <polygon points="580,0 1920,0 1920,620 1100,1080 340,1080 920,0" fill="url(#stripe-b)" opacity="0.92"/>
+  <polygon points="1200,0 1920,0 1920,1080 1480,1080" fill="#1a0533" opacity="0.55"/>
+
+  <!-- High-contrast geometric accents -->
+  <rect x="1320" y="180" width="420" height="420" fill="url(#stripe-c)" transform="rotate(12 1530 390)"/>
+  <circle cx="280" cy="320" r="160" fill="#00e5ff" opacity="0.95"/>
+  <rect x="80" y="640" width="520" height="28" fill="#ffffff"/>
+  <rect x="80" y="700" width="380" height="28" fill="#ff2d6a"/>
+  <rect x="80" y="760" width="440" height="28" fill="#28c840"/>
+
+  <!-- Sharp chevrons -->
+  <polygon points="1580,720 1760,820 1580,920 1420,820" fill="#ffffff"/>
+  <polygon points="1050,120 1180,200 1050,280 920,200" fill="#ffe600"/>
+
+  <!-- Fine grid overlay for refraction detail -->
+  <g opacity="0.18" stroke="#ffffff" stroke-width="1" fill="none">
+    <line x1="0" y1="360" x2="1920" y2="360"/>
+    <line x1="0" y1="720" x2="1920" y2="720"/>
+    <line x1="640" y1="0" x2="640" y2="1080"/>
+    <line x1="1280" y1="0" x2="1280" y2="1080"/>
+  </g>
+
+  <!-- Corner brackets -->
+  <polyline points="40,40 200,40 200,80 80,80 80,200 40,200" fill="none" stroke="#00e5ff" stroke-width="6"/>
+  <polyline points="1880,1040 1720,1040 1720,1000 1840,1000 1840,880 1880,880" fill="none" stroke="#ff2d6a" stroke-width="6"/>
+</svg>

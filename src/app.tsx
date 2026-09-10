@@ -9,12 +9,12 @@ export default function App() {
   inject();
   return (
     <MetaProvider>
-      <Title>WolfCanCode OS – macOS-style Portfolio</Title>
+      <Title>WolfCanCode OS – Liquid Glass Portfolio</Title>
       <Meta
         name="description"
-        content="A macOS-style portfolio app by Tommy with draggable, resizable, and minimizable windows, dock, and desktop icons."
+        content="WolfCanCode OS: a luminous liquid-glass macOS-style portfolio with draggable windows, dock, and desktop icons by Tommy Le."
       />
-      <Meta name="theme-color" content="#2563eb" />
+      <Meta name="theme-color" content="#0a0a0a" />
       <Meta name="apple-mobile-web-app-capable" content="yes" />
       <Meta
         name="apple-mobile-web-app-status-bar-style"
@@ -25,11 +25,11 @@ export default function App() {
       {/* Open Graph / Facebook */}
       <Meta
         property="og:title"
-        content="WolfCanCode OS – macOS-style Portfolio"
+        content="WolfCanCode OS – Liquid Glass Portfolio"
       />
       <Meta
         property="og:description"
-        content="A macOS-style portfolio app by Tommy with draggable, resizable, and minimizable windows, dock, and desktop icons."
+        content="WolfCanCode OS: a luminous liquid-glass macOS-style portfolio with draggable windows, dock, and desktop icons by Tommy Le."
       />
       <Meta property="og:type" content="website" />
       <Meta property="og:image" content="/images/icon-512.png" />
@@ -38,11 +38,11 @@ export default function App() {
       <Meta name="twitter:card" content="summary_large_image" />
       <Meta
         name="twitter:title"
-        content="WolfCanCode OS – macOS-style Portfolio"
+        content="WolfCanCode OS – Liquid Glass Portfolio"
       />
       <Meta
         name="twitter:description"
-        content="A macOS-style portfolio app by Tommy with draggable, resizable, and minimizable windows, dock, and desktop icons."
+        content="WolfCanCode OS: a luminous liquid-glass macOS-style portfolio with draggable windows, dock, and desktop icons by Tommy Le."
       />
       <Meta name="twitter:image" content="/images/icon-512.png" />
       {/* Favicons */}

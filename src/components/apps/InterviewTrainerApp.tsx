@@ -1,6 +1,6 @@
 import { JSX } from "solid-js";
 
-export default function MyCVViewer(): JSX.Element {
+export default function InterviewTrainerApp(): JSX.Element {
   return (
     <iframe
       src="https://interview-ai-trainer.vercel.app/vi"

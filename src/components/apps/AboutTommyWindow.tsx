@@ -1,56 +1,70 @@
 import { JSX } from "solid-js";
 
 function TechTag(props: { tech: string }) {
-  const colorMap: Record<string, string> = {
-    React: "bg-blue-100 text-blue-700 border-blue-300",
-    Vue: "bg-green-100 text-green-700 border-green-300",
-    Angular: "bg-red-100 text-red-700 border-red-300",
-    Solid: "bg-cyan-100 text-cyan-700 border-cyan-300",
-    Qwik: "bg-purple-100 text-purple-700 border-purple-300",
-    Next: "bg-gray-100 text-gray-700 border-gray-300",
-    GenAI: "bg-yellow-100 text-yellow-700 border-yellow-300",
-  };
-  const color =
-    colorMap[props.tech] || "bg-gray-100 text-gray-700 border-gray-300";
   return (
-    <span
-      class={`px-2 py-0.5 rounded-full border text-xs font-semibold mr-1 mb-1 ${color}`}
-    >
+    <span class="mr-1.5 mb-1.5 inline-flex items-center rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[11px] font-medium tracking-wide text-zinc-100 backdrop-blur-sm">
       {props.tech}
     </span>
   );
 }
 
+function SocialButton(props: {
+  href: string;
+  title: string;
+  src: string;
+  alt: string;
+}) {
+  return (
+    <a
+      href={props.href}
+      target="_blank"
+      rel="noopener"
+      title={props.title}
+      class="group inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-white/35 hover:bg-white/15"
+    >
+      <img
+        src={props.src}
+        alt={props.alt}
+        class="h-7 w-7 object-contain opacity-95 transition-opacity group-hover:opacity-100"
+      />
+    </a>
+  );
+}
+
 export default function AboutTommyWindow(): JSX.Element {
   return (
-    <div class="flex items-start justify-center h-full w-full bg-gradient-to-br from-blue-50 via-white to-blue-100">
-      <div class="flex flex-col mt-8 items-center justify-center p-6 sm:p-10 rounded-2xl shadow-2xl bg-white/90 border border-blue-100 max-w-[400px] w-full mx-2">
-        <div class="relative mb-4">
+    <div class="flex h-full w-full items-start justify-center overflow-auto bg-transparent px-4 py-8 sm:py-10">
+      <div class="mx-auto flex w-full max-w-[420px] flex-col items-center text-center">
+        <div class="relative mb-5">
           <img
             src="/images/tommy.gif"
             alt="Tommy"
-            class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-black shadow-lg transition-transform duration-300 hover:scale-105"
-            style={{ "box-shadow": "0 8px 32px 0 rgba(31, 38, 135, 0.15)" }}
+            class="h-24 w-24 rounded-full border border-white/25 object-cover shadow-[0_8px_28px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.2)] sm:h-28 sm:w-28"
           />
           <span
-            class="absolute bottom-2 right-2 bg-green-400 border-2 border-white rounded-full w-4 h-4 animate-pulse"
+            class="absolute bottom-1.5 right-1.5 h-3.5 w-3.5 animate-pulse rounded-full border-2 border-zinc-950 bg-[var(--accent)]"
             title="Online"
-          ></span>
+          />
         </div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold mb-1 text-blue-950 tracking-tight">
+
+        <h2
+          class="mb-1 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          style={{ "font-family": "var(--font-display)" }}
+        >
           Tommy Le
         </h2>
-        <div class="flex items-center justify-center gap-2 mb-2 flex-wrap">
-          <span class="text-gray-700 text-sm font-medium">Working at</span>
+
+        <div class="mb-4 flex flex-wrap items-center justify-center gap-2 text-sm text-zinc-300">
+          <span>Working at</span>
           <img
             src="/images/app-icons/swisscom-logo.jpg"
             alt="Swisscom"
-            class="h-6 w-auto drop-shadow"
-            style={{ "margin-bottom": "-2px" }}
+            class="h-5 w-auto rounded-sm"
           />
-          <span class="text-blue-950 font-bold text-sm">Swisscom</span>
+          <span class="font-semibold text-zinc-100">Swisscom</span>
         </div>
-        <div class="flex flex-wrap justify-center gap-2 mb-2">
+
+        <div class="mb-5 flex flex-wrap justify-center">
           <TechTag tech="React" />
           <TechTag tech="Vue" />
           <TechTag tech="Angular" />
@@ -59,47 +73,36 @@ export default function AboutTommyWindow(): JSX.Element {
           <TechTag tech="Next" />
           <TechTag tech="GenAI" />
         </div>
-        <div class="text-gray-700 text-sm mb-2 text-left w-full">
-          <span class="font-bold">With 8+ years</span> crafting responsive,
-          scalable web apps for startups and enterprises, I thrive on{" "}
-          <span class="font-bold">clean code</span>,{" "}
-          <span class="font-bold">smooth UX</span>, and{" "}
-          <span class="font-bold">robust design systems</span>.<br />
+
+        <p class="mb-3 w-full text-left text-sm leading-relaxed text-zinc-300">
+          <span class="font-semibold text-zinc-100">With 8+ years</span> crafting
+          responsive, scalable web apps for startups and enterprises, I thrive on{" "}
+          <span class="font-semibold text-zinc-100">clean code</span>,{" "}
+          <span class="font-semibold text-zinc-100">smooth UX</span>, and{" "}
+          <span class="font-semibold text-zinc-100">robust design systems</span>.
           My journey spans React, Vue, Angular, Solid, Qwik, Next and
           beyond—mentoring teams, architecting UI libraries, and always pushing
           for better, faster, and more delightful products.
-        </div>
-        <div class="italic text-blue-700 text-sm mb-4 text-left w-full">
+        </p>
+
+        <p class="mb-6 w-full text-left text-sm italic leading-relaxed text-zinc-400">
           Lately, I'm diving into Generative AI, blending product thinking with
           cutting-edge tech to create smarter, more adaptive user experiences.
-        </div>
-        <div class="flex gap-6 justify-center mt-2 w-full">
-          <a
+        </p>
+
+        <div class="flex gap-4 justify-center">
+          <SocialButton
             href="https://github.com/WolfCanCode"
-            target="_blank"
-            rel="noopener"
             title="GitHub"
-            class="transition-transform duration-200 hover:scale-125 hover:drop-shadow-lg"
-          >
-            <img
-              src="/images/app-icons/github-logo.png"
-              alt="GitHub"
-              class="w-9 h-9"
-            />
-          </a>
-          <a
+            src="/images/app-icons/github-logo.png"
+            alt="GitHub"
+          />
+          <SocialButton
             href="https://www.linkedin.com/in/wolfcancode/"
-            target="_blank"
-            rel="noopener"
             title="LinkedIn"
-            class="transition-transform duration-200 hover:scale-125 hover:drop-shadow-lg"
-          >
-            <img
-              src="/images/app-icons/linkedin.webp"
-              alt="LinkedIn"
-              class="w-9 h-9"
-            />
-          </a>
+            src="/images/app-icons/linkedin.webp"
+            alt="LinkedIn"
+          />
         </div>
       </div>
     </div>

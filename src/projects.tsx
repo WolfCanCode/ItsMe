@@ -3,6 +3,7 @@ import AppIcon from "./components/AppIcon";
 import MyCVViewer from "./components/apps/MyCVViewerApp";
 import CourseTrainerApp from "./components/apps/CourseTrainerApp";
 import InterviewTrainerApp from "./components/apps/InterviewTrainerApp";
+import TommyPdfApp from "./components/apps/TommyPdfApp";
 import AboutTommyWindow from "./components/apps/AboutTommyWindow";
 export interface Project {
   id: string;
@@ -50,6 +51,23 @@ export const projects: Project[] = [
     component: InterviewTrainerApp,
     defaultWidth: 900,
     defaultHeight: 650,
+  },
+  {
+    id: "tommy-pdf",
+    name: "My PDF",
+    icon: () => (
+      <AppIcon
+        src="/images/app-icons/tommy-pdf.png"
+        alt="My PDF"
+        size={40}
+      />
+    ),
+    description:
+      "Merge, make, mark up, compress, and sign PDFs in the browser. Files never leave this computer.",
+    link: "https://tommypdf.vercel.app/",
+    component: TommyPdfApp,
+    defaultWidth: 960,
+    defaultHeight: 720,
   },
   {
     id: "my-cv",

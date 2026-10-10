@@ -168,7 +168,8 @@ const CIH_POINTS = [
 
 export default function AboutTommyWindow(): JSX.Element {
   return (
-    <div class="about-tommy relative h-full min-h-0 w-full overflow-auto bg-[#f3f5f8] text-zinc-900">
+    // Container queries track THIS OS window, not the browser viewport
+    <div class="about-tommy @container relative h-full min-h-0 w-full overflow-x-hidden overflow-y-auto bg-[#f3f5f8] text-zinc-900">
       <div
         class="pointer-events-none absolute inset-0"
         style={{
@@ -187,30 +188,30 @@ export default function AboutTommyWindow(): JSX.Element {
         }}
       />
 
-      <div class="relative mx-auto flex h-full min-h-full w-full max-w-6xl flex-col justify-center gap-8 px-6 py-8 sm:px-10 sm:py-12 lg:grid lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] lg:items-start lg:gap-x-14 lg:gap-y-8 lg:px-14 lg:py-14 xl:gap-x-20">
-        <header class="flex flex-row items-end gap-5 lg:sticky lg:top-6 lg:flex-col lg:items-start lg:gap-6">
+      <div class="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 @[28rem]:gap-7 @[28rem]:px-6 @[28rem]:py-8 @[40rem]:gap-8 @[40rem]:px-10 @[40rem]:py-10 @[52rem]:grid @[52rem]:grid-cols-[minmax(180px,240px)_minmax(0,1fr)] @[52rem]:items-start @[52rem]:gap-x-10 @[52rem]:px-12 @[52rem]:py-12 @[64rem]:gap-x-16 @[64rem]:px-14">
+        <header class="flex min-w-0 flex-row items-end gap-4 @[40rem]:gap-5 @[52rem]:sticky @[52rem]:top-4 @[52rem]:flex-col @[52rem]:items-start @[52rem]:gap-5">
           <div class="relative shrink-0">
             <img
               src="/images/tommy.gif"
               alt="Tommy Le"
-              class="h-20 w-20 rounded-[1.25rem] object-cover shadow-[0_12px_36px_rgba(15,23,42,0.18)] ring-1 ring-zinc-900/10 sm:h-24 sm:w-24 sm:rounded-3xl lg:h-36 lg:w-36 lg:rounded-[1.75rem]"
+              class="h-16 w-16 rounded-[1.1rem] object-cover shadow-[0_12px_36px_rgba(15,23,42,0.18)] ring-1 ring-zinc-900/10 @[28rem]:h-20 @[28rem]:w-20 @[28rem]:rounded-[1.25rem] @[40rem]:h-24 @[40rem]:w-24 @[40rem]:rounded-3xl @[52rem]:h-32 @[52rem]:w-32 @[52rem]:rounded-[1.75rem]"
               loading="lazy"
               decoding="async"
             />
             <span
-              class="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#f3f5f8] bg-[var(--accent)] shadow-[0_0_0_3px_rgba(40,200,64,0.25)] lg:h-4 lg:w-4"
+              class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#f3f5f8] bg-[var(--accent)] shadow-[0_0_0_3px_rgba(40,200,64,0.25)] @[40rem]:h-3.5 @[40rem]:w-3.5 @[52rem]:h-4 @[52rem]:w-4"
               title="Online"
             />
           </div>
           <div class="min-w-0 flex-1 pb-0.5 text-left">
             <p
-              class="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500"
+              class="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500 @[28rem]:mb-1.5 @[28rem]:text-[11px]"
               style={{ "font-family": "var(--font-body)" }}
             >
               About
             </p>
             <h2
-              class="text-[2rem] leading-none tracking-tight text-zinc-900 sm:text-[2.5rem] lg:text-[3.25rem]"
+              class="text-[1.65rem] leading-none tracking-tight break-words text-zinc-900 @[28rem]:text-[2rem] @[40rem]:text-[2.5rem] @[52rem]:text-[2.75rem]"
               style={{
                 "font-family": "var(--font-display)",
                 "font-weight": "700",
@@ -218,7 +219,7 @@ export default function AboutTommyWindow(): JSX.Element {
             >
               Tommy Le
             </h2>
-            <p class="mt-3 flex flex-wrap items-center gap-2 text-sm text-zinc-600 lg:text-base">
+            <p class="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-600 @[40rem]:mt-3 @[40rem]:text-base">
               <span>Engineer at</span>
               <span class="inline-flex items-center gap-1.5 rounded-md border border-zinc-900/8 bg-white/80 px-2 py-0.5 shadow-sm shadow-zinc-900/5">
                 <img
@@ -234,25 +235,24 @@ export default function AboutTommyWindow(): JSX.Element {
           </div>
         </header>
 
-        <div class="flex min-h-0 flex-col justify-center gap-7 text-left lg:gap-8">
+        <div class="flex min-w-0 flex-col gap-5 text-left @[28rem]:gap-6 @[40rem]:gap-7">
           <div
-            class="flex flex-wrap gap-2"
+            class="flex min-w-0 flex-wrap gap-1.5 @[28rem]:gap-2"
             style={{ "font-family": "var(--font-body)" }}
           >
             <For each={TECH}>
               {(tech) => (
-                <span
-                  class="inline-flex items-center gap-1.5 rounded-md border border-zinc-900/8 bg-white/80 px-2.5 py-1 text-[13px] text-zinc-700 shadow-sm shadow-zinc-900/5 sm:text-sm"
-                  style={{ color: "inherit" }}
-                >
-                  <span style={{ color: tech.color }}>{tech.icon()}</span>
-                  {tech.name}
+                <span class="inline-flex max-w-full items-center gap-1.5 rounded-md border border-zinc-900/8 bg-white/80 px-2 py-1 text-[12px] text-zinc-700 shadow-sm shadow-zinc-900/5 @[28rem]:px-2.5 @[28rem]:text-[13px]">
+                  <span class="shrink-0" style={{ color: tech.color }}>
+                    {tech.icon()}
+                  </span>
+                  <span class="truncate">{tech.name}</span>
                 </span>
               )}
             </For>
           </div>
 
-          <p class="max-w-2xl text-[15px] leading-[1.7] text-zinc-600 sm:text-base lg:text-[1.05rem] lg:leading-[1.75]">
+          <p class="min-w-0 text-[14px] leading-[1.65] text-zinc-600 @[28rem]:text-[15px] @[28rem]:leading-[1.7] @[40rem]:text-base @[52rem]:text-[1.05rem] @[52rem]:leading-[1.75]">
             <span class="font-semibold text-zinc-900">8+ years</span> building
             responsive, scalable web apps for startups and enterprises — focused
             on{" "}
@@ -263,8 +263,7 @@ export default function AboutTommyWindow(): JSX.Element {
             feel fast and deliberate.
           </p>
 
-          {/* Now building — agents / CIH */}
-          <section class="max-w-2xl overflow-hidden rounded-2xl border border-zinc-900/8 bg-white/75 p-5 shadow-sm shadow-zinc-900/5 sm:p-6">
+          <section class="min-w-0 overflow-hidden rounded-2xl border border-zinc-900/8 bg-white/75 p-4 shadow-sm shadow-zinc-900/5 @[28rem]:p-5 @[40rem]:p-6">
             <div class="mb-3 flex flex-wrap items-center gap-2">
               <span class="rounded-full bg-zinc-900 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
                 Now building
@@ -279,7 +278,7 @@ export default function AboutTommyWindow(): JSX.Element {
             </div>
 
             <h3
-              class="text-xl leading-tight tracking-tight text-zinc-900 sm:text-2xl"
+              class="text-lg leading-tight tracking-tight text-zinc-900 @[28rem]:text-xl @[40rem]:text-2xl"
               style={{
                 "font-family": "var(--font-display)",
                 "font-weight": "700",
@@ -287,21 +286,20 @@ export default function AboutTommyWindow(): JSX.Element {
             >
               CIH — Codebase Intelligence Hub
             </h3>
-            <p class="mt-2 text-[14px] leading-relaxed text-zinc-600 sm:text-[15px]">
+            <p class="mt-2 text-[13px] leading-relaxed text-zinc-600 @[28rem]:text-[14px] @[40rem]:text-[15px]">
               Hooked on the agent era —{" "}
               <span class="font-semibold text-zinc-800">agents</span>,{" "}
               <span class="font-semibold text-zinc-800">MCP</span>, and{" "}
               <span class="font-semibold text-zinc-800">skills</span> as the new
               interface to software. CIH is my OpenCode-based agent, rebuilt for
-              real budgets, a native CodeGraph, full observability, and
-              hard stops on secret leaks — with a TUI that finally feels
-              first-class.
+              real budgets, a native CodeGraph, full observability, and hard
+              stops on secret leaks — with a TUI that finally feels first-class.
             </p>
 
-            <ul class="mt-4 grid gap-2.5 sm:grid-cols-2">
+            <ul class="mt-4 grid grid-cols-1 gap-2.5 @[36rem]:grid-cols-2">
               <For each={[...CIH_POINTS]}>
                 {(point) => (
-                  <li class="rounded-xl border border-zinc-900/6 bg-zinc-50/80 px-3 py-2.5">
+                  <li class="min-w-0 rounded-xl border border-zinc-900/6 bg-zinc-50/80 px-3 py-2.5">
                     <p class="text-[12px] font-semibold uppercase tracking-wide text-zinc-800">
                       {point.label}
                     </p>
@@ -314,7 +312,7 @@ export default function AboutTommyWindow(): JSX.Element {
             </ul>
           </section>
 
-          <footer class="flex flex-wrap items-center gap-3 pt-1">
+          <footer class="flex flex-wrap items-center gap-3 pt-1 pb-2">
             <a
               href="https://github.com/WolfCanCode"
               target="_blank"

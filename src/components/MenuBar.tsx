@@ -20,10 +20,13 @@ export default function MenuBar() {
   return (
     <div
       class="fixed top-0 left-0 z-[var(--z-menubar)] w-full"
-      style={{ height: "var(--menu-height)" }}
+      style={{
+        "padding-top": "env(safe-area-inset-top, 0px)",
+        height: "calc(var(--menu-height) + env(safe-area-inset-top, 0px))",
+      }}
     >
       <div
-        class="flex h-full w-full items-center px-4"
+        class="flex h-[var(--menu-height)] w-full items-center px-3 sm:px-4"
         style={{
           background: "rgba(24,24,27,0.55)",
           "backdrop-filter": "blur(16px) saturate(1.4)",
@@ -32,20 +35,20 @@ export default function MenuBar() {
             "inset 0 -0.5px 0 rgba(255,255,255,0.12), 0 1px 0 rgba(0,0,0,0.2)",
         }}
       >
-        <div class="flex flex-row items-center gap-2.5">
+        <div class="flex min-w-0 flex-row items-center gap-2 sm:gap-2.5">
           <img
             src="/images/tommy-circle.png"
             alt="Tommy"
-            class="h-7 w-7 rounded-full object-cover ring-1 ring-white/25"
+            class="h-6 w-6 shrink-0 rounded-full object-cover ring-1 ring-white/25 sm:h-7 sm:w-7"
           />
           <span
-            class="my-auto text-sm font-medium text-white/95"
+            class="my-auto truncate text-xs font-medium text-white/95 sm:text-sm"
             style={{ "font-family": "var(--font-display)" }}
           >
             Hi, I'm Tommy!
           </span>
         </div>
-        <span class="my-auto ml-auto mr-4 font-mono text-xs text-white/80">
+        <span class="my-auto ml-auto shrink-0 font-mono text-[11px] text-white/80 sm:mr-4 sm:text-xs">
           {time()}
         </span>
       </div>

@@ -1,10 +1,22 @@
-import { For, Show, createEffect, createSignal, onMount } from "solid-js";
+import {
+  For,
+  Show,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import Desktop from "~/components/Desktop";
 import Dock, { DockRef } from "~/components/Dock";
 import Window from "~/components/Window";
 import ContextMenu, { ContextMenuItem } from "~/components/ui/ContextMenu";
 import { projects } from "../projects";
-import { clampWindow, maximizedRect } from "~/lib/desktopBounds";
+import {
+  clampWindow,
+  initialWindowRect,
+  isCompactLayout,
+  maximizedRect,
+} from "~/lib/desktopBounds";
 import {
   WALLPAPERS,
   WallpaperId,
@@ -39,13 +51,6 @@ const [interactingWindowId, setInteractingWindowId] = createSignal<
 >(null);
 const [isInteracting, setIsInteracting] = createSignal(false);
 
-function isMobile() {
-  if (typeof window === "undefined") return false;
-  return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-}
-
 function isWallpaperId(id: unknown): id is WallpaperId {
   return WALLPAPERS.some((w) => w.id === id);
 }
@@ -69,6 +74,25 @@ export default function Home() {
     createSignal<WallpaperId>("liquid-sharp");
   let dockRef: DockRef | undefined;
 
+  function reflowWindowsToViewport() {
+    const compact = isCompactLayout();
+    const maxIds = maximizedIds();
+    setWindowStates((states) => {
+      const next: Record<string, WindowState> = { ...states };
+      for (const id of Object.keys(next)) {
+        const cur = next[id];
+        if (!cur) continue;
+        // Compact or maximized: fill the usable desktop (keeps clear of dock)
+        if (compact || maxIds.includes(id)) {
+          next[id] = maximizedRect();
+        } else {
+          next[id] = clampWindow(cur.x, cur.y, cur.width, cur.height);
+        }
+      }
+      return next;
+    });
+  }
+
   onMount(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -84,6 +108,24 @@ export default function Home() {
         }
       } catch {}
     }
+
+    // Fit any restored windows to the current viewport / dock layout
+    reflowWindowsToViewport();
+
+    let resizeTimer: number | undefined;
+    const onResize = () => {
+      if (resizeTimer !== undefined) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        reflowWindowsToViewport();
+      }, 80);
+    };
+    window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
+    onCleanup(() => {
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+      if (resizeTimer !== undefined) window.clearTimeout(resizeTimer);
+    });
   });
 
   createEffect(() => {
@@ -101,19 +143,12 @@ export default function Home() {
   function openWindow(id: string) {
     const project = projects.find((p) => p.id === id);
     if (!project) return;
-    let defaultWidth = project.defaultWidth ?? DEFAULT_STATE.width;
-    let defaultHeight = project.defaultHeight ?? DEFAULT_STATE.height;
-    let defaultX: number;
-    let defaultY: number;
-    if (isMobile()) {
-      defaultWidth = Math.floor(window.innerWidth * 0.9);
-      defaultHeight = Math.floor(window.innerHeight * 0.6);
-      defaultX = 10;
-      defaultY = 70;
-    } else {
-      defaultX = DEFAULT_STATE.x;
-      defaultY = DEFAULT_STATE.y;
-    }
+    const preferred = initialWindowRect(
+      project.defaultWidth ?? DEFAULT_STATE.width,
+      project.defaultHeight ?? DEFAULT_STATE.height,
+      DEFAULT_STATE.x,
+      DEFAULT_STATE.y,
+    );
     if (minimizedIds().includes(id)) {
       let restoreFrom: { x: number; y: number } | undefined = undefined;
       if (dockRef) {
@@ -142,16 +177,14 @@ export default function Home() {
     } else if (!openIds().includes(id)) {
       setWindowStatus((status) => ({ ...status, [id]: { status: "open" } }));
       setOpenIds((ids) => [...ids, id]);
-      const initial = clampWindow(
-        defaultX,
-        defaultY,
-        defaultWidth,
-        defaultHeight
-      );
       setWindowStates((states) => ({
         ...states,
-        [id]: states[id] || initial,
+        [id]: states[id] || preferred,
       }));
+      // On phones, treat new windows as maximized into the usable area
+      if (isCompactLayout()) {
+        setMaximizedIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+      }
       setActiveWindow(id);
     } else {
       setWindowStatus((status) => ({ ...status, [id]: { status: "open" } }));
@@ -208,6 +241,14 @@ export default function Home() {
   }
 
   function toggleMaximize(id: string) {
+    // Phones stay edge-to-usable-area — no tiny restore rects
+    if (isCompactLayout()) {
+      updateWindowState(id, maximizedRect());
+      setMaximizedIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+      bringToFront(id);
+      setActiveWindow(id);
+      return;
+    }
     if (maximizedIds().includes(id)) {
       const prev = restoreRects()[id];
       if (prev) updateWindowState(id, prev);

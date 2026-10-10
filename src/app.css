@@ -9,6 +9,8 @@
   --font-body: "DM Sans", sans-serif;
   --menu-height: 40px;
   --dock-clearance: 88px;
+  --dock-clearance-right: 88px;
+  --dock-clearance-bottom: 72px;
   --glass-depth: 10;
   --glass-strength: 100;
   --glass-cab: 2;
@@ -17,6 +19,14 @@
   --z-dock: 1200;
   --z-context: 1300;
   --z-interact: 10000;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --dock-clearance: 72px;
+    --dock-clearance-right: 0px;
+    --menu-height: 36px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

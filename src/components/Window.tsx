@@ -6,7 +6,11 @@ import {
   onCleanup,
   createSignal,
 } from "solid-js";
-import { clampWindow, MIN_W, MIN_H } from "~/lib/desktopBounds";
+import {
+  clampWindow,
+  isCompactLayout,
+  minWindowSize,
+} from "~/lib/desktopBounds";
 
 type WindowStatus = "open" | "minimizing" | "closing";
 
@@ -141,6 +145,8 @@ export default function Window(props: {
   const [lockGeomTransition, setLockGeomTransition] = createSignal(false);
   /** Allow maximize morph only after mount (avoids open flash). */
   const [geomReady, setGeomReady] = createSignal(false);
+  /** Hide resize grips on compact / phone layouts. */
+  const [compact, setCompact] = createSignal(false);
 
   const MAC_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
   const MINIMIZE_MS = 520;
@@ -260,9 +266,16 @@ export default function Window(props: {
   }
 
   onMount(() => {
+    const syncCompact = () => setCompact(isCompactLayout());
+    syncCompact();
+    window.addEventListener("resize", syncCompact);
+
     const readyT = window.setTimeout(() => setGeomReady(true), 80);
     if (!contentRef) {
-      onCleanup(() => clearTimeout(readyT));
+      onCleanup(() => {
+        clearTimeout(readyT);
+        window.removeEventListener("resize", syncCompact);
+      });
       return;
     }
     const handler = (e: TransitionEvent) => {
@@ -273,6 +286,7 @@ export default function Window(props: {
     contentRef.addEventListener("transitionend", handler);
     onCleanup(() => {
       clearTimeout(readyT);
+      window.removeEventListener("resize", syncCompact);
       contentRef?.removeEventListener("transitionend", handler);
     });
   });
@@ -437,6 +451,7 @@ export default function Window(props: {
   }
 
   function resizeFromDelta(handle: ResizeHandle, dx: number, dy: number) {
+    const { minW, minH } = minWindowSize();
     let newX = startPos.x;
     let newY = startPos.y;
     let newWidth = startSize.width;
@@ -444,23 +459,23 @@ export default function Window(props: {
 
     if (handle.includes("w")) {
       newX = startPos.x + dx;
-      newWidth = Math.max(MIN_W, startSize.width - dx);
+      newWidth = Math.max(minW, startSize.width - dx);
     } else if (handle.includes("e")) {
-      newWidth = Math.max(MIN_W, startSize.width + dx);
+      newWidth = Math.max(minW, startSize.width + dx);
     }
 
     if (handle.includes("n")) {
       newY = startPos.y + dy;
-      newHeight = Math.max(MIN_H, startSize.height - dy);
+      newHeight = Math.max(minH, startSize.height - dy);
     } else if (handle.includes("s")) {
-      newHeight = Math.max(MIN_H, startSize.height + dy);
+      newHeight = Math.max(minH, startSize.height + dy);
     }
 
-    if (handle.includes("w") && newWidth === MIN_W) {
-      newX = startPos.x + startSize.width - MIN_W;
+    if (handle.includes("w") && newWidth === minW) {
+      newX = startPos.x + startSize.width - minW;
     }
-    if (handle.includes("n") && newHeight === MIN_H) {
-      newY = startPos.y + startSize.height - MIN_H;
+    if (handle.includes("n") && newHeight === minH) {
+      newY = startPos.y + startSize.height - minH;
     }
 
     applyGeometryDom(newX, newY, newWidth, newHeight);
@@ -689,47 +704,49 @@ export default function Window(props: {
         />
       )}
 
-      {/* Outer-rim grips only — NW/NE sit mostly outside so they miss traffic lights */}
-      {resizeGrip(
-        "nw",
-        "-left-1 -top-1 h-2.5 w-2.5",
-        <CornerCurve corner="nw" />,
-      )}
-      {resizeGrip(
-        "ne",
-        "-right-1 -top-1 h-2.5 w-2.5",
-        <CornerCurve corner="ne" />,
-      )}
-      {resizeGrip(
-        "sw",
-        "bottom-0 left-0 h-3.5 w-3.5",
-        <CornerCurve corner="sw" />,
-      )}
-      {resizeGrip(
-        "se",
-        "bottom-0 right-0 h-3.5 w-3.5",
-        <CornerCurve corner="se" />,
-      )}
-      {resizeGrip(
-        "n",
-        "left-1/2 top-0 flex h-2 w-20 -translate-x-1/2 items-start justify-center",
-        <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
-      )}
-      {resizeGrip(
-        "s",
-        "bottom-0 left-1/2 flex h-3 w-20 -translate-x-1/2 items-end justify-center pb-[1px]",
-        <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
-      )}
-      {resizeGrip(
-        "w",
-        "left-0 top-[40%] flex h-16 w-2.5 items-center justify-start pl-[1px]",
-        <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
-      )}
-      {resizeGrip(
-        "e",
-        "right-0 top-1/2 flex h-20 w-3 -translate-y-1/2 items-center justify-end pr-[1px]",
-        <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
-      )}
+      {/* Resize grips: desktop only — phones use maximize fill */}
+      <Show when={!compact()}>
+        {resizeGrip(
+          "nw",
+          "-left-1 -top-1 h-2.5 w-2.5",
+          <CornerCurve corner="nw" />,
+        )}
+        {resizeGrip(
+          "ne",
+          "-right-1 -top-1 h-2.5 w-2.5",
+          <CornerCurve corner="ne" />,
+        )}
+        {resizeGrip(
+          "sw",
+          "bottom-0 left-0 h-3.5 w-3.5",
+          <CornerCurve corner="sw" />,
+        )}
+        {resizeGrip(
+          "se",
+          "bottom-0 right-0 h-3.5 w-3.5",
+          <CornerCurve corner="se" />,
+        )}
+        {resizeGrip(
+          "n",
+          "left-1/2 top-0 flex h-2 w-20 -translate-x-1/2 items-start justify-center",
+          <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
+        )}
+        {resizeGrip(
+          "s",
+          "bottom-0 left-1/2 flex h-3 w-20 -translate-x-1/2 items-end justify-center pb-[1px]",
+          <div class="pointer-events-none h-[1.5px] w-10 rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
+        )}
+        {resizeGrip(
+          "w",
+          "left-0 top-[40%] flex h-16 w-2.5 items-center justify-start pl-[1px]",
+          <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
+        )}
+        {resizeGrip(
+          "e",
+          "right-0 top-1/2 flex h-20 w-3 -translate-y-1/2 items-center justify-end pr-[1px]",
+          <div class="pointer-events-none h-10 w-[1.5px] rounded-full bg-white/70 opacity-0 transition-opacity group-hover:opacity-90" />,
+        )}
+      </Show>
     </div>
   );
 }

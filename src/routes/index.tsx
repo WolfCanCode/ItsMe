@@ -353,6 +353,7 @@ export default function Home() {
         minimizedIds={minimizedIds()}
         ref={(ref) => (dockRef = ref)}
         activeId={activeWindow() ?? undefined}
+        onLayoutChange={() => reflowWindowsToViewport()}
       />
       {isInteracting() && (
         <div

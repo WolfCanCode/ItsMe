@@ -2,11 +2,32 @@ export const MENU_HEIGHT = 40;
 export const MENU_HEIGHT_COMPACT = 36;
 /** Desktop right-rail dock width (windows may sit under glass). */
 export const DOCK_CLEARANCE_RIGHT = 88;
-/** Compact bottom dock height including padding (windows stay clear). */
-export const DOCK_CLEARANCE_BOTTOM = 72;
+/** Compact bottom dock — expanded (larger icons + padding). */
+export const DOCK_CLEARANCE_BOTTOM_EXPANDED = 96;
+/** Compact bottom dock — collapsed peek / grabber only. */
+export const DOCK_CLEARANCE_BOTTOM_COLLAPSED = 34;
+/** @deprecated use expanded/collapsed constants */
+export const DOCK_CLEARANCE_BOTTOM = DOCK_CLEARANCE_BOTTOM_EXPANDED;
 export const MIN_W = 280;
 export const MIN_H = 180;
 export const COMPACT_BREAKPOINT = 768;
+
+/** Whether the compact bottom dock is fully shown (vs grabber peek). */
+let compactDockExpanded = true;
+
+export function setCompactDockExpanded(expanded: boolean) {
+  compactDockExpanded = expanded;
+  if (typeof document !== "undefined") {
+    document.documentElement.style.setProperty(
+      "--dock-clearance-bottom",
+      `${expanded ? DOCK_CLEARANCE_BOTTOM_EXPANDED : DOCK_CLEARANCE_BOTTOM_COLLAPSED}px`,
+    );
+  }
+}
+
+export function isCompactDockExpanded() {
+  return compactDockExpanded;
+}
 
 /** Narrow / phone layout — dock goes bottom, windows keep clear of it. */
 export function isCompactLayout(
@@ -24,9 +45,15 @@ export function menuHeight(
 export function dockClearance(
   vw = typeof window !== "undefined" ? window.innerWidth : 1024,
 ) {
-  return isCompactLayout(vw)
-    ? { right: 0, bottom: DOCK_CLEARANCE_BOTTOM }
-    : { right: DOCK_CLEARANCE_RIGHT, bottom: 0 };
+  if (!isCompactLayout(vw)) {
+    return { right: DOCK_CLEARANCE_RIGHT, bottom: 0 };
+  }
+  return {
+    right: 0,
+    bottom: compactDockExpanded
+      ? DOCK_CLEARANCE_BOTTOM_EXPANDED
+      : DOCK_CLEARANCE_BOTTOM_COLLAPSED,
+  };
 }
 
 export function usableBounds(vw = window.innerWidth, vh = window.innerHeight) {

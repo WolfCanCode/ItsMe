@@ -10,7 +10,7 @@
   --menu-height: 40px;
   --dock-clearance: 88px;
   --dock-clearance-right: 88px;
-  --dock-clearance-bottom: 72px;
+  --dock-clearance-bottom: 96px;
   --glass-depth: 10;
   --glass-strength: 100;
   --glass-cab: 2;
@@ -23,7 +23,7 @@
 
 @media (max-width: 768px) {
   :root {
-    --dock-clearance: 72px;
+    --dock-clearance: 96px;
     --dock-clearance-right: 0px;
     --menu-height: 36px;
   }

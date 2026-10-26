@@ -32,3 +32,6 @@ Thumbs.db
 
 # Local git worktrees
 .worktrees/
+
+# Local browser verification artifacts
+/output/playwright/

@@ -9,12 +9,12 @@ export default function App() {
   inject();
   return (
     <MetaProvider>
-      <Title>WolfCanCode OS – Liquid Glass Portfolio</Title>
+      <Title>Tommy Le — Engineer, Builder & Technical Leader</Title>
       <Meta
         name="description"
-        content="WolfCanCode OS: a luminous liquid-glass macOS-style portfolio with draggable windows, dock, and desktop icons by Tommy Le."
+        content="Tommy Le is a developer and technical leader in the Netherlands. Almost a decade connecting frontend, backend, infrastructure, and people."
       />
-      <Meta name="theme-color" content="#0a0a0a" />
+      <Meta name="theme-color" content="#191b16" />
       <Meta name="apple-mobile-web-app-capable" content="yes" />
       <Meta
         name="apple-mobile-web-app-status-bar-style"
@@ -25,11 +25,11 @@ export default function App() {
       {/* Open Graph / Facebook */}
       <Meta
         property="og:title"
-        content="WolfCanCode OS – Liquid Glass Portfolio"
+        content="Tommy Le — Engineer, Builder & Technical Leader"
       />
       <Meta
         property="og:description"
-        content="WolfCanCode OS: a luminous liquid-glass macOS-style portfolio with draggable windows, dock, and desktop icons by Tommy Le."
+        content="Tommy Le is a developer and technical leader in the Netherlands. Almost a decade connecting frontend, backend, infrastructure, and people."
       />
       <Meta property="og:type" content="website" />
       <Meta property="og:image" content="/images/icon-512.png" />
@@ -38,11 +38,11 @@ export default function App() {
       <Meta name="twitter:card" content="summary_large_image" />
       <Meta
         name="twitter:title"
-        content="WolfCanCode OS – Liquid Glass Portfolio"
+        content="Tommy Le — Engineer, Builder & Technical Leader"
       />
       <Meta
         name="twitter:description"
-        content="WolfCanCode OS: a luminous liquid-glass macOS-style portfolio with draggable windows, dock, and desktop icons by Tommy Le."
+        content="Tommy Le is a developer and technical leader in the Netherlands. Almost a decade connecting frontend, backend, infrastructure, and people."
       />
       <Meta name="twitter:image" content="/images/icon-512.png" />
       {/* Favicons */}
